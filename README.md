@@ -22,4 +22,7 @@ Built to make studying and self-improvement fun, consistent, and rewarding.
 
 ## 🌐 Live Demo
 
-(Add your GitHub Pages link here later)
+<img width="1739" height="945" alt="image" src="https://github.com/user-attachments/assets/028a4f6a-fb10-4749-a076-516798a6e3cf" />
+<img width="946" height="979" alt="image" src="https://github.com/user-attachments/assets/128d5cf8-6a7d-43e3-bebc-8c576297cd9d" />
+<img width="1510" height="966" alt="image" src="https://github.com/user-attachments/assets/ab580bdf-53b9-4238-bf0c-49920018558f" />
+
