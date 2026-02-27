@@ -1,0 +1,2468 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚡ LevelUp v3 — Gamified Productivity</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ===== ROOT VARS ===== */
+:root {
+  --accent:#00f5a0;--accent2:#00d4ff;--accent3:#ff6b6b;--accent4:#ffd93d;
+  --bg:#0a0a14;--bg2:#10101e;--bg3:#16162a;
+  --card:#1a1a2e;--card2:#1e1e38;
+  --border:rgba(0,245,160,0.15);
+  --text:#e8e8f0;--text2:#9090aa;--text3:#606080;
+  --shadow:0 8px 32px rgba(0,0,0,0.5);
+  --glow:0 0 20px rgba(0,245,160,0.3);
+  --radius:16px;
+  --font-head:'Orbitron',monospace;
+  --font-body:'Rajdhani',sans-serif;
+}
+[data-theme="light"]{
+  --bg:#f0f0fa;--bg2:#e8e8f8;--bg3:#e0e0f0;
+  --card:#fff;--card2:#f8f8ff;
+  --border:rgba(0,150,100,0.2);
+  --text:#1a1a2e;--text2:#5a5a7a;--text3:#9090aa;
+  --shadow:0 8px 32px rgba(0,0,0,0.1);
+  --glow:0 0 20px rgba(0,200,120,0.2);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;transition:background .4s,color .4s;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,245,160,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,245,160,.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+[data-theme="light"] body::before{background-image:linear-gradient(rgba(0,120,80,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,120,80,.05) 1px,transparent 1px)}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--bg2)}::-webkit-scrollbar-thumb{background:var(--accent);border-radius:3px}
+
+/* ===== LAYOUT ===== */
+.app-wrapper{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:16px 20px}
+
+/* ===== HEADER ===== */
+header{display:flex;align-items:center;justify-content:space-between;padding:16px 0 20px;flex-wrap:wrap;gap:12px}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{font-size:30px;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.logo h1{font-family:var(--font-head);font-size:clamp(16px,3vw,24px);font-weight:900;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:2px}
+.header-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.header-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.btn-icon{width:40px;height:40px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.btn-icon:hover{background:var(--card2);border-color:var(--accent);box-shadow:var(--glow);transform:translateY(-2px)}
+
+/* ===== END-OF-DAY COUNTDOWN ===== */
+.day-countdown{display:flex;align-items:center;gap:10px;padding:8px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);font-family:var(--font-head);font-size:13px;font-weight:700;transition:all .3s}
+.day-countdown.urgent{border-color:rgba(255,107,107,.5);background:rgba(255,107,107,.08);color:#ff6b6b;box-shadow:0 0 15px rgba(255,107,107,.2)}
+.day-countdown.warning{border-color:rgba(255,217,61,.4);background:rgba(255,217,61,.08);color:#ffd93d}
+.day-countdown.normal{color:var(--text2)}
+.countdown-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:pulse-dot 1s ease-in-out infinite}
+.day-countdown.warning .countdown-dot{background:#ffd93d}
+.day-countdown.urgent .countdown-dot{background:#ff6b6b}
+@keyframes pulse-dot{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.5);opacity:.5}}
+
+/* ===== NAV TABS ===== */
+.nav-tabs{display:flex;gap:3px;background:var(--card);border-radius:14px;padding:5px;border:1px solid var(--border);flex-wrap:wrap;margin-bottom:20px}
+.nav-tab{flex:1;min-width:80px;padding:9px 10px;border:none;background:transparent;color:var(--text2);font-family:var(--font-body);font-size:12px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;cursor:pointer;border-radius:10px;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:4px}
+.nav-tab:hover{color:var(--text);background:var(--card2)}
+.nav-tab.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0a0a14;font-weight:700;box-shadow:0 4px 15px rgba(0,245,160,.4)}
+.panel{display:none}.panel.active{display:block}
+
+/* ===== STATS GRID ===== */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:20px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;text-align:center;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s}
+.stat-card:hover{transform:translateY(-4px);box-shadow:var(--shadow)}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.stat-card.xp::before{background:linear-gradient(90deg,#ffd93d,#ff9f43)}
+.stat-card.streak::before{background:linear-gradient(90deg,#ff6b6b,#ee5a24)}
+.stat-card.level::before{background:linear-gradient(90deg,#a29bfe,#6c5ce7)}
+.stat-card.combo::before{background:linear-gradient(90deg,#fd79a8,#e84393)}
+.stat-icon{font-size:24px;margin-bottom:6px}
+.stat-value{font-family:var(--font-head);font-size:clamp(20px,4vw,28px);font-weight:700;color:var(--accent);line-height:1}
+.stat-card.xp .stat-value{color:#ffd93d}
+.stat-card.streak .stat-value{color:#ff6b6b}
+.stat-card.level .stat-value{color:#a29bfe}
+.stat-card.combo .stat-value{color:#fd79a8}
+.stat-label{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text2);margin-top:3px;font-weight:600}
+
+/* ===== LEVEL CARD ===== */
+.level-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:20px;position:relative;overflow:hidden}
+.level-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap;gap:10px}
+.level-badge{display:flex;align-items:center;gap:12px}
+.level-orb{width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#a29bfe,#6c5ce7);display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-size:20px;font-weight:900;color:white;box-shadow:0 0 30px rgba(162,155,254,.5);position:relative;flex-shrink:0}
+.level-orb::after{content:'';position:absolute;inset:-4px;border-radius:50%;border:2px solid rgba(162,155,254,.3);animation:pulse-ring 2s ease-in-out infinite}
+@keyframes pulse-ring{0%,100%{transform:scale(1);opacity:.5}50%{transform:scale(1.1);opacity:0}}
+.level-info h2{font-family:var(--font-head);font-size:clamp(13px,2vw,17px);font-weight:700}
+.level-info p{font-size:12px;color:var(--text2);margin-top:3px}
+.class-badge{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:3px 8px;border-radius:6px;margin-top:5px;background:rgba(0,245,160,.15);color:var(--accent);border:1px solid rgba(0,245,160,.3)}
+.xp-to-next{font-family:var(--font-head);font-size:13px;color:var(--accent);text-align:right}
+.xp-to-next span{display:block;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px}
+.progress-bar-bg{height:13px;background:var(--bg3);border-radius:7px;overflow:hidden}
+.progress-bar-fill{height:100%;border-radius:7px;background:linear-gradient(90deg,#a29bfe,#6c5ce7,#00f5a0);background-size:200% 100%;animation:shimmer 2s linear infinite;transition:width .8s cubic-bezier(.34,1.56,.64,1);position:relative}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.progress-bar-fill::after{content:'';position:absolute;top:0;right:0;width:20px;height:100%;background:rgba(255,255,255,.4);border-radius:7px;filter:blur(3px)}
+.progress-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:5px;font-weight:600}
+
+/* ===== SECTION HEADER ===== */
+.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.section-title{font-family:var(--font-head);font-size:clamp(11px,2vw,14px);font-weight:700;letter-spacing:1.5px;text-transform:uppercase}
+.section-title span{color:var(--accent)}
+
+/* ===== BUTTONS ===== */
+.btn{padding:9px 18px;border-radius:10px;border:none;font-family:var(--font-body);font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0a0a14;box-shadow:0 4px 15px rgba(0,245,160,.3)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,245,160,.5)}
+.btn-danger{background:linear-gradient(135deg,#ff6b6b,#ee5a24);color:#fff}
+.btn-danger:hover{transform:translateY(-2px)}
+.btn-warning{background:linear-gradient(135deg,#ffd93d,#ff9f43);color:#0a0a14}
+.btn-warning:hover{transform:translateY(-2px)}
+.btn-purple{background:linear-gradient(135deg,#a29bfe,#6c5ce7);color:#fff}
+.btn-purple:hover{transform:translateY(-2px)}
+.btn-ghost{background:var(--card);color:var(--text2);border:1px solid var(--border)}
+.btn-ghost:hover{color:var(--text);border-color:var(--accent)}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-xs{padding:4px 8px;font-size:11px;border-radius:7px}
+
+/* ===== COMBO BANNER ===== */
+.combo-banner{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-100px);background:linear-gradient(135deg,#fd79a8,#e84393);color:#fff;font-family:var(--font-head);font-size:clamp(14px,3vw,20px);font-weight:900;padding:12px 28px;border-radius:50px;box-shadow:0 8px 30px rgba(232,67,147,.5);z-index:9000;transition:transform .4s cubic-bezier(.34,1.56,.64,1);letter-spacing:1px;white-space:nowrap}
+.combo-banner.show{transform:translateX(-50%) translateY(0)}
+
+/* ===== ALMOST THERE BANNER ===== */
+.almost-banner{background:linear-gradient(135deg,rgba(255,217,61,.12),rgba(255,159,67,.08));border:1px solid rgba(255,217,61,.4);border-radius:var(--radius);padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.almost-banner .icon{font-size:30px;flex-shrink:0}
+.almost-banner h3{font-family:var(--font-head);font-size:14px;color:#ffd93d;font-weight:700}
+.almost-banner p{font-size:13px;color:var(--text2);margin-top:3px}
+.ghost-xp-badge{font-family:var(--font-head);font-size:18px;font-weight:900;color:rgba(255,107,107,.7);text-decoration:line-through;margin-left:auto;white-space:nowrap}
+
+/* ===== COMMITMENT CONTRACT ===== */
+.contract-card{background:linear-gradient(135deg,rgba(162,155,254,.08),rgba(108,92,231,.05));border:2px solid rgba(162,155,254,.3);border-radius:var(--radius);padding:22px;margin-bottom:20px;position:relative;overflow:hidden}
+.contract-card::before{content:'📜 TODAY\'S CONTRACT';position:absolute;top:12px;right:14px;font-family:var(--font-head);font-size:9px;color:#a29bfe;letter-spacing:2px;opacity:.7}
+.contract-signed{border-color:rgba(0,245,160,.4);background:linear-gradient(135deg,rgba(0,245,160,.06),rgba(0,212,255,.04))}
+.contract-top{display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.contract-icon{font-size:36px;flex-shrink:0}
+.contract-info h3{font-family:var(--font-head);font-size:15px;color:#a29bfe;font-weight:700}
+.contract-info p{font-size:13px;color:var(--text2);margin-top:4px}
+.contract-reward{font-family:var(--font-head);font-size:26px;font-weight:900;color:#ffd93d;margin-top:4px}
+.contract-reward span{font-size:12px;color:var(--text3);font-weight:400;display:block;margin-top:2px}
+.contract-signed-label{font-size:12px;color:var(--accent);font-weight:700;letter-spacing:1px;margin-top:8px}
+
+/* ===== BOSS BATTLE ARENA ===== */
+.battle-arena-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:20px;position:relative}
+.battle-canvas-container{position:relative;width:100%;background:linear-gradient(180deg,#0a0020 0%,#1a0040 40%,#0d1117 100%);overflow:hidden}
+canvas#battleCanvas{display:block;width:100%;height:auto;image-rendering:pixelated}
+.battle-ui-overlay{position:absolute;top:0;left:0;right:0;padding:14px 16px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;gap:10px}
+.battle-hp-block{flex:1;max-width:200px}
+.battle-hp-name{font-family:var(--font-head);font-size:10px;font-weight:700;letter-spacing:1px;margin-bottom:4px}
+.battle-hp-name.hero-name{color:var(--accent)}
+.battle-hp-name.boss-name-hud{color:#ff6b6b;text-align:right}
+.battle-hp-bar-bg{height:10px;background:rgba(0,0,0,.5);border-radius:5px;overflow:hidden;border:1px solid rgba(255,255,255,.1)}
+.battle-hp-bar-fill{height:100%;border-radius:5px;transition:width .8s cubic-bezier(.34,1.56,.64,1)}
+.hero-hp-fill{background:linear-gradient(90deg,#00f5a0,#00d4ff)}
+.boss-hp-fill{background:linear-gradient(90deg,#ff6b6b,#ffd93d)}
+.battle-hp-text{font-family:var(--font-head);font-size:9px;margin-top:3px;font-weight:700}
+.battle-hp-text.hero-hp-text{color:var(--accent)}
+.battle-hp-text.boss-hp-text{color:#ff6b6b;text-align:right}
+.battle-vs{font-family:var(--font-head);font-size:18px;font-weight:900;color:#ffd93d;text-shadow:0 0 10px rgba(255,217,61,.8);align-self:center;flex-shrink:0}
+.battle-log-box{background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 14px;margin:0 16px 14px;min-height:44px}
+.battle-log-text{font-family:var(--font-head);font-size:11px;color:#e0e0f0;letter-spacing:.5px;line-height:1.6;min-height:18px}
+.battle-controls{display:flex;gap:10px;padding:0 16px 16px;flex-wrap:wrap;align-items:center}
+.battle-xp-display{font-family:var(--font-head);font-size:13px;color:#ffd93d;font-weight:700;margin-left:auto}
+.battle-xp-display span{font-size:10px;color:var(--text3);display:block;text-align:right}
+.battle-info-row{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-top:1px solid var(--border);flex-wrap:wrap;gap:8px;background:rgba(0,0,0,.2)}
+.battle-stat-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);font-size:11px;font-weight:600;font-family:var(--font-head)}
+/* Defeat / Victory overlays rendered on canvas */
+.boss-card{display:none} /* hide old boss card */
+
+/* ===== TASK DIFFICULTY TIERS ===== */
+.difficulty-badge{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 7px;border-radius:5px;flex-shrink:0}
+.diff-easy{background:rgba(0,245,160,.15);color:var(--accent)}
+.diff-normal{background:rgba(0,212,255,.15);color:var(--accent2)}
+.diff-hard{background:rgba(255,217,61,.15);color:#ffd93d}
+.diff-legendary{background:rgba(255,107,107,.15);color:#ff6b6b;animation:legendary-glow 1.5s ease-in-out infinite}
+@keyframes legendary-glow{0%,100%{box-shadow:0 0 5px rgba(255,107,107,.3)}50%{box-shadow:0 0 15px rgba(255,107,107,.7)}}
+.task-item.legendary{border-color:rgba(255,107,107,.4);background:rgba(255,107,107,.04)}
+.task-item.legendary::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 0% 50%,rgba(255,107,107,.06),transparent 60%);pointer-events:none}
+
+/* ===== LOOT BOX ===== */
+.loot-overlay{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:10500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s}
+.loot-overlay.show{opacity:1;pointer-events:all}
+.loot-box-wrap{text-align:center}
+.loot-box{font-size:80px;cursor:pointer;animation:loot-pulse 1s ease-in-out infinite;transition:transform .2s;user-select:none}
+.loot-box:hover{transform:scale(1.1)}
+@keyframes loot-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.loot-box.opened{animation:loot-open .5s ease forwards}
+@keyframes loot-open{0%{transform:scale(1)}30%{transform:scale(1.4) rotate(-5deg)}60%{transform:scale(.8) rotate(10deg)}100%{transform:scale(0);opacity:0}}
+.loot-box-title{font-family:var(--font-head);font-size:clamp(16px,3vw,24px);color:#ffd93d;margin-bottom:8px;font-weight:900}
+.loot-box-hint{font-size:14px;color:var(--text2);margin-bottom:20px}
+.loot-reward-reveal{margin-top:20px;animation:reward-pop .6s cubic-bezier(.34,1.56,.64,1)}
+@keyframes reward-pop{0%{transform:scale(0) rotate(-10deg)}100%{transform:scale(1) rotate(0)}}
+.loot-reward-card{background:var(--card);border:2px solid #ffd93d;border-radius:20px;padding:30px 40px;display:inline-block;box-shadow:0 0 60px rgba(255,217,61,.4)}
+.loot-reward-emoji{font-size:60px;margin-bottom:10px}
+.loot-reward-name{font-family:var(--font-head);font-size:18px;color:#ffd93d;font-weight:700}
+.loot-reward-desc{font-size:14px;color:var(--text2);margin-top:6px}
+
+/* ===== SKILL TREE ===== */
+.class-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.class-card{background:var(--card);border:2px solid var(--border);border-radius:var(--radius);padding:20px;cursor:pointer;transition:all .2s;text-align:center}
+.class-card:hover{transform:translateY(-4px);border-color:var(--accent)}
+.class-card.selected{border-color:var(--accent4);box-shadow:0 0 20px rgba(255,217,61,.3);background:rgba(255,217,61,.05)}
+.class-emoji{font-size:40px;margin-bottom:10px}
+.class-name{font-family:var(--font-head);font-size:13px;font-weight:700;color:var(--text);letter-spacing:.5px}
+.class-desc{font-size:12px;color:var(--text2);margin-top:6px;line-height:1.5}
+.class-bonus{font-size:11px;color:var(--accent4);font-weight:700;margin-top:8px;text-transform:uppercase;letter-spacing:.5px}
+
+/* ===== POWER HOUR ===== */
+.power-hour-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;background:linear-gradient(135deg,rgba(255,217,61,.2),rgba(255,159,67,.15));border:1px solid rgba(255,217,61,.5);font-family:var(--font-head);font-size:12px;font-weight:700;color:#ffd93d;animation:power-pulse 1s ease-in-out infinite;margin-bottom:12px}
+@keyframes power-pulse{0%,100%{box-shadow:0 0 10px rgba(255,217,61,.3)}50%{box-shadow:0 0 25px rgba(255,217,61,.6)}}
+.power-hour-badge .dot{width:8px;height:8px;border-radius:50%;background:#ffd93d;animation:pulse-dot 1s ease-in-out infinite}
+
+/* ===== PERSONAL RECORDS ===== */
+.pr-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px}
+.pr-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;position:relative}
+.pr-card::before{content:'🏅 PR';position:absolute;top:8px;right:10px;font-size:9px;font-weight:700;color:var(--accent4);letter-spacing:1px}
+.pr-value{font-family:var(--font-head);font-size:22px;font-weight:700;color:#ffd93d}
+.pr-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-top:3px;font-weight:600}
+.pr-card.beating{border-color:rgba(0,245,160,.5);animation:pr-glow .8s ease-in-out infinite}
+@keyframes pr-glow{0%,100%{box-shadow:none}50%{box-shadow:0 0 20px rgba(0,245,160,.4)}}
+.pr-beating-label{position:absolute;bottom:8px;left:0;right:0;font-size:9px;text-align:center;color:var(--accent);font-weight:700;letter-spacing:.5px;animation:blink .8s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ===== FILTER PILLS ===== */
+.filter-pills{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+.filter-pill{padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:var(--card);color:var(--text2);font-family:var(--font-body);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;cursor:pointer;transition:all .2s}
+.filter-pill:hover{border-color:var(--accent);color:var(--text)}
+.filter-pill.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0a0a14;border-color:transparent;box-shadow:0 3px 10px rgba(0,245,160,.3)}
+
+/* ===== TASK LIST ===== */
+.task-list{display:flex;flex-direction:column;gap:9px;margin-bottom:20px}
+.task-item{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:13px 16px;display:flex;align-items:center;gap:11px;transition:all .3s;position:relative;overflow:hidden}
+.task-item:hover{border-color:var(--accent);box-shadow:var(--glow);transform:translateX(4px)}
+.task-item.completed{border-color:rgba(0,245,160,.25);background:rgba(0,245,160,.04)}
+.task-item.completed .task-name{text-decoration:line-through;color:var(--text3)}
+.task-item.just-completed{animation:task-pop .5s ease}
+@keyframes task-pop{0%{transform:scale(1)}30%{transform:scale(1.02) translateX(4px);box-shadow:0 0 30px rgba(0,245,160,.5)}100%{transform:scale(1) translateX(4px)}}
+.task-checkbox{width:26px;height:26px;border-radius:7px;border:2px solid var(--text3);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;font-size:14px}
+.task-checkbox:hover{border-color:var(--accent)}
+.task-item.completed .task-checkbox{border-color:var(--accent);background:var(--accent);color:#0a0a14}
+.task-content{flex:1;min-width:0}
+.task-name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.task-meta{display:flex;gap:7px;margin-top:3px;align-items:center;flex-wrap:wrap}
+.task-xp{font-family:var(--font-head);font-size:11px;font-weight:700;color:#ffd93d;background:rgba(255,217,61,.1);border-radius:5px;padding:1px 7px;letter-spacing:.3px}
+.task-xp.boosted{color:#ff9f43;background:rgba(255,159,67,.15);animation:xp-boost .5s ease-in-out infinite alternate}
+@keyframes xp-boost{from{box-shadow:none}to{box-shadow:0 0 8px rgba(255,159,67,.5)}}
+.task-category{font-size:10px;color:var(--text3);background:var(--bg3);border-radius:5px;padding:1px 7px;font-weight:600;text-transform:uppercase}
+.task-actions{display:flex;gap:5px;flex-shrink:0;align-items:center}
+.task-btn{width:30px;height:30px;border-radius:7px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all .2s}
+.task-btn:hover{background:var(--card2);color:var(--text)}
+.task-btn.delete:hover{color:var(--accent3);border-color:var(--accent3)}
+.task-btn.edit:hover{color:var(--accent2);border-color:var(--accent2)}
+.task-btn.pomo:hover{color:#ffd93d;border-color:#ffd93d}
+
+/* ===== ADD TASK FORM ===== */
+.add-task-form{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:20px;display:none}
+.add-task-form.visible{display:block}
+.form-row{display:flex;gap:10px;flex-wrap:wrap}
+.form-group{flex:1;min-width:120px}
+.form-group label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:5px;font-weight:600}
+.form-group input,.form-group select{width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:9px;color:var(--text);font-family:var(--font-body);font-size:14px;outline:none;transition:border-color .2s}
+.form-group input:focus,.form-group select:focus{border-color:var(--accent);box-shadow:var(--glow)}
+.form-actions{margin-top:12px;display:flex;gap:8px}
+
+/* ===== DAILY CHALLENGE ===== */
+.challenge-card{background:linear-gradient(135deg,rgba(255,217,61,.1),rgba(255,159,67,.06));border:1px solid rgba(255,217,61,.35);border-radius:var(--radius);padding:18px;margin-bottom:20px;position:relative;overflow:hidden}
+.challenge-card::before{content:'⭐ DAILY CHALLENGE';position:absolute;top:11px;right:13px;font-family:var(--font-head);font-size:9px;font-weight:700;color:#ffd93d;letter-spacing:1.5px;opacity:.8}
+.challenge-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.challenge-icon{font-size:34px;flex-shrink:0}
+.challenge-info h3{font-family:var(--font-head);font-size:14px;font-weight:700;color:#ffd93d}
+.challenge-info p{font-size:12px;color:var(--text2);margin-top:2px}
+.challenge-timer{font-size:11px;color:var(--text3);margin-top:4px;font-weight:600}
+
+/* ===== ACHIEVEMENTS ===== */
+.achievements-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;margin-bottom:20px}
+.achievement-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;transition:all .3s;position:relative;overflow:hidden}
+.achievement-card.unlocked{border-color:rgba(255,217,61,.35);background:rgba(255,217,61,.04)}
+.achievement-card.unlocked::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#ffd93d,#ff9f43)}
+.achievement-card.locked{opacity:.4;filter:grayscale(.7)}
+.achievement-emoji{font-size:32px;transition:transform .3s}
+.achievement-card:hover .achievement-emoji{transform:scale(1.2) rotate(5deg)}
+.achievement-name{font-family:var(--font-head);font-size:11px;font-weight:700;letter-spacing:.5px}
+.achievement-desc{font-size:11px;color:var(--text2);line-height:1.4}
+.achievement-badge{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 7px;border-radius:5px;margin-top:3px}
+.achievement-card.unlocked .achievement-badge{background:rgba(255,217,61,.2);color:#ffd93d}
+.achievement-card.locked .achievement-badge{background:var(--bg3);color:var(--text3)}
+
+/* ===== WEEKLY CHART ===== */
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:20px}
+.chart-bars{display:flex;align-items:flex-end;gap:7px;height:110px;margin-top:14px}
+.chart-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;height:100%;justify-content:flex-end}
+.chart-bar{width:100%;border-radius:5px 5px 0 0;background:linear-gradient(180deg,var(--accent),var(--accent2));transition:height 1s cubic-bezier(.34,1.56,.64,1);min-height:4px;position:relative;cursor:pointer}
+.chart-bar:hover::after{content:attr(data-xp)' XP';position:absolute;top:-26px;left:50%;transform:translateX(-50%);background:var(--card2);border:1px solid var(--border);padding:2px 7px;border-radius:5px;font-size:10px;font-weight:600;white-space:nowrap;z-index:10}
+.chart-bar.today{background:linear-gradient(180deg,#ffd93d,#ff9f43)}
+.chart-day{font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase}
+
+/* ===== SETTINGS ===== */
+.settings-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.settings-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.settings-card h3{font-family:var(--font-head);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);margin-bottom:16px}
+.toggle-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)}
+.toggle-row:last-child{border-bottom:none}
+.toggle-label{font-size:13px;font-weight:500}
+.toggle-label small{display:block;font-size:10px;color:var(--text3);margin-top:1px}
+.toggle{position:relative;width:46px;height:24px}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:var(--bg3);border-radius:12px;cursor:pointer;transition:background .3s;border:1px solid var(--border)}
+.toggle-slider::before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:var(--text3);border-radius:50%;transition:transform .3s,background .3s}
+.toggle input:checked + .toggle-slider{background:rgba(0,245,160,.2);border-color:var(--accent)}
+.toggle input:checked + .toggle-slider::before{transform:translateX(22px);background:var(--accent)}
+.color-picker-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.color-swatch{width:32px;height:32px;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:all .2s}
+.color-swatch.active,.color-swatch:hover{border-color:#fff;transform:scale(1.1)}
+.manage-task-row{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.manage-task-row:last-child{border-bottom:none}
+.manage-task-name{flex:1;min-width:90px;font-size:13px;font-weight:500}
+.manage-task-xp{width:65px;padding:5px 9px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:var(--font-body);font-size:12px;outline:none;text-align:center}
+
+/* ===== STREAKS ===== */
+.streak-display{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.streak-dot{width:26px;height:26px;border-radius:7px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:13px;transition:all .3s}
+.streak-dot.active{background:linear-gradient(135deg,#ff6b6b,#ee5a24);border-color:#ff6b6b;box-shadow:0 0 10px rgba(255,107,107,.4)}
+.streak-saver-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:8px;background:rgba(162,155,254,.15);border:1px solid rgba(162,155,254,.3);font-size:11px;font-weight:700;color:#a29bfe;letter-spacing:.5px;margin-top:8px}
+
+/* ===== OVERLAYS ===== */
+.levelup-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:10000;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;opacity:0;pointer-events:none;transition:opacity .3s}
+.levelup-overlay.show{opacity:1;pointer-events:all}
+.levelup-card{background:var(--card);border:2px solid var(--accent);border-radius:24px;padding:44px;text-align:center;box-shadow:0 0 80px rgba(0,245,160,.4);animation:levelup-pop .5s cubic-bezier(.34,1.56,.64,1)}
+@keyframes levelup-pop{0%{transform:scale(.5) rotate(-5deg)}100%{transform:scale(1) rotate(0)}}
+.levelup-emoji{font-size:70px;animation:float 1s ease-in-out infinite}
+.levelup-title{font-family:var(--font-head);font-size:clamp(24px,5vw,42px);font-weight:900;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent4));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin:14px 0 6px}
+.levelup-subtitle{font-size:16px;color:var(--text2)}
+.levelup-level{font-family:var(--font-head);font-size:58px;font-weight:900;color:#a29bfe;line-height:1;margin:8px 0}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:5000;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .3s}
+.modal-overlay.show{opacity:1;pointer-events:all}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:28px;width:100%;max-width:440px;transform:scale(.95);transition:transform .3s}
+.modal-overlay.show .modal{transform:scale(1)}
+.modal h3{font-family:var(--font-head);font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:18px;color:var(--accent)}
+.modal-actions{display:flex;gap:8px;margin-top:18px;justify-content:flex-end}
+
+/* ===== POPUPS / TOASTS ===== */
+.xp-popup{position:fixed;pointer-events:none;font-family:var(--font-head);font-size:18px;font-weight:900;color:#ffd93d;text-shadow:0 0 10px rgba(255,217,61,.8);z-index:9999;animation:xp-float 1.2s ease-out forwards}
+@keyframes xp-float{0%{opacity:1;transform:translateY(0) scale(.8)}20%{transform:translateY(-10px) scale(1.2)}100%{opacity:0;transform:translateY(-80px) scale(.9)}}
+.achievement-toast{position:fixed;bottom:20px;right:20px;background:var(--card);border:1px solid rgba(255,217,61,.5);border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 32px rgba(0,0,0,.5),0 0 20px rgba(255,217,61,.2);z-index:9998;transform:translateX(120%);transition:transform .4s cubic-bezier(.34,1.56,.64,1);max-width:300px}
+.achievement-toast.show{transform:translateX(0)}
+.toast-icon{font-size:26px;flex-shrink:0}
+.toast-body strong{font-family:var(--font-head);font-size:10px;color:#ffd93d;display:block;letter-spacing:1px}
+.toast-body p{font-size:12px;color:var(--text);margin-top:2px}
+.confetti-piece{position:fixed;width:10px;height:10px;border-radius:2px;pointer-events:none;z-index:10001;animation:confetti-fall linear forwards}
+@keyframes confetti-fall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+
+/* ===== POMO WIDGET ===== */
+.pomo-widget{position:fixed;bottom:20px;left:20px;background:var(--card);border:1px solid rgba(255,217,61,.4);border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 32px rgba(0,0,0,.4);z-index:4000;transform:translateY(120px);transition:transform .4s cubic-bezier(.34,1.56,.64,1);min-width:210px}
+.pomo-widget.show{transform:translateY(0)}
+.pomo-widget-time{font-family:var(--font-head);font-size:24px;font-weight:900;color:#ffd93d;min-width:65px}
+.pomo-widget-time.break{color:#55efc4}
+.pomo-widget-task{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px}
+.pomo-widget-label{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-top:1px}
+.pomo-widget-close{width:26px;height:26px;border-radius:7px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;font-size:13px}
+.pomo-widget-close:hover{color:var(--accent3);border-color:var(--accent3)}
+
+/* ===== EMPTY STATE ===== */
+.empty-state{text-align:center;padding:36px;color:var(--text3)}
+.empty-state .icon{font-size:44px;margin-bottom:10px}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:600px){
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .nav-tab{padding:7px 7px;font-size:10px;min-width:60px}
+  .level-orb{width:48px;height:48px;font-size:17px}
+  .settings-grid{grid-template-columns:1fr}
+  .achievements-grid{grid-template-columns:repeat(2,1fr)}
+  .class-grid{grid-template-columns:repeat(2,1fr)}
+  .pomo-widget{left:10px;bottom:10px}
+  .achievement-toast{right:10px;bottom:10px;max-width:260px}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== LEVEL UP OVERLAY ===== -->
+<div class="levelup-overlay" id="levelupOverlay" onclick="dismissLevelUp()">
+  <div class="levelup-card" onclick="event.stopPropagation()">
+    <div class="levelup-emoji">🏆</div>
+    <div class="levelup-title">LEVEL UP!</div>
+    <div class="levelup-level" id="levelupNumber">2</div>
+    <div class="levelup-subtitle" id="levelupTitle">Keep grinding!</div>
+    <button class="btn btn-primary" style="margin-top:18px" onclick="dismissLevelUp()">⚡ Let's Go!</button>
+  </div>
+</div>
+
+<!-- ===== LOOT BOX OVERLAY ===== -->
+<div class="loot-overlay" id="lootOverlay">
+  <div class="loot-box-wrap">
+    <div class="loot-box-title">🎁 LOOT BOX UNLOCKED!</div>
+    <div class="loot-box-hint">Click the box to reveal your reward</div>
+    <div class="loot-box" id="lootBox" onclick="openLootBox()">📦</div>
+    <div id="lootReward" style="display:none" class="loot-reward-reveal">
+      <div class="loot-reward-card">
+        <div class="loot-reward-emoji" id="lootRewardEmoji">⚡</div>
+        <div class="loot-reward-name" id="lootRewardName">XP Bonus!</div>
+        <div class="loot-reward-desc" id="lootRewardDesc">+50 XP added</div>
+      </div>
+      <br>
+      <button class="btn btn-primary" onclick="closeLootBox()" style="margin-top:16px">Awesome! 🎉</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== COMBO BANNER ===== -->
+<div class="combo-banner" id="comboBanner">🔥 COMBO x<span id="comboNum">2</span> — XP MULTIPLIER ACTIVE!</div>
+
+<!-- ===== ACHIEVEMENT TOAST ===== -->
+<div class="achievement-toast" id="achievementToast">
+  <div class="toast-icon" id="toastIcon">🏅</div>
+  <div class="toast-body"><strong>🏆 ACHIEVEMENT UNLOCKED</strong><p id="toastText">Name here</p></div>
+</div>
+
+<!-- ===== POMO WIDGET ===== -->
+<div class="pomo-widget" id="pomoWidget">
+  <div>
+    <div class="pomo-widget-label" id="pomoWidgetLabel">FOCUS</div>
+    <div class="pomo-widget-time" id="pomoWidgetTime">25:00</div>
+  </div>
+  <div style="flex:1">
+    <div class="pomo-widget-task" id="pomoWidgetTask">Task</div>
+    <div style="display:flex;gap:5px;margin-top:5px">
+      <button class="btn btn-warning btn-xs" id="pomoWidgetBtn" onclick="togglePomoFromWidget()">▶</button>
+      <button class="btn btn-ghost btn-xs" onclick="stopPomoGlobal()">■</button>
+    </div>
+  </div>
+  <button class="pomo-widget-close" onclick="closePomoWidget()">✕</button>
+</div>
+
+<!-- ===== EDIT MODAL ===== -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <h3>✏️ Edit Task</h3>
+    <div class="form-group" style="margin-bottom:10px">
+      <label>Task Name</label>
+      <input type="text" id="editTaskName">
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>XP Reward</label><input type="number" id="editTaskXP" min="1" max="500"></div>
+      <div class="form-group"><label>Category</label><input type="text" id="editTaskCategory"></div>
+      <div class="form-group">
+        <label>Difficulty</label>
+        <select id="editTaskDiff">
+          <option value="easy">⬢ Easy</option>
+          <option value="normal" selected>◆ Normal</option>
+          <option value="hard">🔥 Hard</option>
+          <option value="legendary">💀 Legendary</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeEditModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEditTask()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MAIN APP ===== -->
+<div class="app-wrapper">
+  <header>
+    <div class="logo">
+      <div class="logo-icon">⚡</div>
+      <h1>LEVELUP</h1>
+    </div>
+    <div class="header-right">
+      <div class="header-actions">
+        <button class="btn-icon" id="soundBtn" onclick="toggleSound()" title="Sound">🔇</button>
+        <button class="btn-icon" id="themeBtn" onclick="toggleTheme()" title="Theme">🌙</button>
+        <button class="btn-icon" onclick="exportData()" title="Export">📤</button>
+        <button class="btn-icon" onclick="document.getElementById('importFile').click()" title="Import">📥</button>
+        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+        <button class="btn-icon" onclick="confirmReset()" title="Reset" style="color:var(--accent3)">🗑️</button>
+      </div>
+      <div class="day-countdown normal" id="dayCountdown">
+        <div class="countdown-dot"></div>
+        <span id="countdownText">Loading...</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- NAV TABS -->
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchTab('dashboard')">📊 Dashboard</button>
+    <button class="nav-tab" onclick="switchTab('tasks')">⚔️ Tasks</button>
+    <button class="nav-tab" onclick="switchTab('boss')">👹 Boss</button>
+    <button class="nav-tab" onclick="switchTab('skills')">🌿 Skills</button>
+    <button class="nav-tab" onclick="switchTab('achievements')">🏆 Awards</button>
+    <button class="nav-tab" onclick="switchTab('stats')">📈 Stats</button>
+    <button class="nav-tab" onclick="switchTab('settings')">⚙️ Settings</button>
+  </div>
+
+  <!-- ===== DASHBOARD ===== -->
+  <div class="panel active" id="panel-dashboard">
+    <div id="powerHourBanner"></div>
+    <div id="almostThereBanner"></div>
+
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-icon">⚡</div><div class="stat-value" id="dashTotalXP">0</div><div class="stat-label">Total XP</div></div>
+      <div class="stat-card xp"><div class="stat-icon">🌟</div><div class="stat-value" id="dashTodayXP">0</div><div class="stat-label">XP Today</div></div>
+      <div class="stat-card streak"><div class="stat-icon">🔥</div><div class="stat-value" id="dashStreak">0</div><div class="stat-label">Streak</div></div>
+      <div class="stat-card level"><div class="stat-icon">✅</div><div class="stat-value" id="dashCompletion">0%</div><div class="stat-label">Complete</div></div>
+      <div class="stat-card combo"><div class="stat-icon">⚡</div><div class="stat-value" id="dashCombo">x1</div><div class="stat-label">Combo</div></div>
+    </div>
+
+    <div class="level-card">
+      <div class="level-card-top">
+        <div class="level-badge">
+          <div class="level-orb" id="levelOrb">1</div>
+          <div class="level-info">
+            <h2 id="levelTitle">Novice</h2>
+            <p id="levelSubtitle">Keep grinding!</p>
+            <div class="class-badge" id="classBadge">No Class</div>
+          </div>
+        </div>
+        <div class="xp-to-next"><div id="xpToNext">100</div><span>XP to next level</span></div>
+      </div>
+      <div class="progress-bar-bg"><div class="progress-bar-fill" id="levelProgressBar" style="width:0%"></div></div>
+      <div class="progress-labels"><span id="progressLabelLeft">0 XP</span><span id="progressLabelRight">100 XP</span></div>
+    </div>
+
+    <div id="dailyChallengeContainer"></div>
+
+    <div class="section-header">
+      <div class="section-title">Today's <span>Quests</span></div>
+      <button class="btn btn-primary btn-sm" onclick="switchTab('tasks')">View All →</button>
+    </div>
+    <div class="task-list" id="dashTaskList"></div>
+
+    <div class="chart-card">
+      <div class="section-title" style="margin-bottom:10px">🔥 Streak <span>History</span></div>
+      <div class="streak-display" id="streakDots"></div>
+      <div id="streakSaverBadge"></div>
+    </div>
+  </div>
+
+  <!-- ===== TASKS ===== -->
+  <div class="panel" id="panel-tasks">
+    <div class="section-header">
+      <div class="section-title">⚔️ <span>Daily</span> Quests</div>
+      <button class="btn btn-primary btn-sm" onclick="toggleAddForm()">+ Add Quest</button>
+    </div>
+    <div class="add-task-form" id="addTaskForm">
+      <div class="form-row">
+        <div class="form-group" style="flex:2"><label>Task Name</label><input type="text" id="newTaskName" placeholder="Quest name..."></div>
+        <div class="form-group"><label>XP Reward</label><input type="number" id="newTaskXP" value="10" min="1" max="500"></div>
+        <div class="form-group">
+          <label>Category</label>
+          <select id="newTaskCategory">
+            <option value="Study">Study</option><option value="Code">Code</option>
+            <option value="ML">ML</option><option value="Wellness">Wellness</option>
+            <option value="General">General</option><option value="Custom">Custom</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Difficulty</label>
+          <select id="newTaskDiff">
+            <option value="easy">⬢ Easy (x1)</option>
+            <option value="normal" selected>◆ Normal (x1.5)</option>
+            <option value="hard">🔥 Hard (x2)</option>
+            <option value="legendary">💀 Legendary (x3)</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group" id="customCategoryWrap" style="display:none;margin-top:8px">
+        <label>Custom Category</label>
+        <input type="text" id="customCategoryInput" placeholder="Category name...">
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-ghost" onclick="toggleAddForm(false)">Cancel</button>
+        <button class="btn btn-primary" onclick="addTask()">⚡ Add Quest</button>
+      </div>
+    </div>
+    <div class="filter-pills" id="categoryFilters"></div>
+    <div class="task-list" id="fullTaskList"></div>
+  </div>
+
+  <!-- ===== BOSS BATTLE ===== -->
+  <div class="panel" id="panel-boss">
+    <div id="bossContainer">
+      <!-- Battle arena injected by renderBoss() -->
+    </div>
+  </div>
+
+  <!-- ===== SKILL TREE ===== -->
+  <div class="panel" id="panel-skills">
+    <div class="section-header">
+      <div class="section-title">🌿 Choose Your <span>Class</span></div>
+      <div id="currentClassLabel" style="font-size:13px;color:var(--text2);font-weight:600"></div>
+    </div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:16px">Your class gives you passive XP bonuses. Choose wisely — you can change it anytime.</p>
+    <div class="class-grid" id="classGrid"></div>
+  </div>
+
+  <!-- ===== ACHIEVEMENTS ===== -->
+  <div class="panel" id="panel-achievements">
+    <div class="section-header">
+      <div class="section-title">🏆 <span>Achievements</span></div>
+      <div id="achievementCount" style="font-size:12px;color:var(--text2);font-weight:600"></div>
+    </div>
+    <div class="achievements-grid" id="achievementsGrid"></div>
+  </div>
+
+  <!-- ===== STATS ===== -->
+  <div class="panel" id="panel-stats">
+    <div class="section-header"><div class="section-title">🏅 Personal <span>Records</span></div></div>
+    <div class="pr-grid" id="prGrid"></div>
+    <div class="chart-card">
+      <div class="section-title">📈 Weekly XP <span>Chart</span></div>
+      <div class="chart-bars" id="weeklyChart"></div>
+    </div>
+    <div class="chart-card">
+      <div class="section-title" style="margin-bottom:14px">🧮 All-Time <span>Stats</span></div>
+      <div class="stats-grid" style="margin:0">
+        <div class="stat-card"><div class="stat-icon">⚡</div><div class="stat-value" id="statsTotal">0</div><div class="stat-label">Total XP</div></div>
+        <div class="stat-card xp"><div class="stat-icon">📅</div><div class="stat-value" id="statsDays">0</div><div class="stat-label">Days Active</div></div>
+        <div class="stat-card streak"><div class="stat-icon">🔥</div><div class="stat-value" id="statsMaxStreak">0</div><div class="stat-label">Best Streak</div></div>
+        <div class="stat-card level"><div class="stat-icon">✅</div><div class="stat-value" id="statsTotalCompleted">0</div><div class="stat-label">Tasks Done</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SETTINGS ===== -->
+  <div class="panel" id="panel-settings">
+    <div class="settings-grid">
+      <div class="settings-card">
+        <h3>🎮 Gameplay</h3>
+        <div class="toggle-row"><div class="toggle-label">XP Penalty for Skips<small>Deduct XP at midnight</small></div><label class="toggle"><input type="checkbox" id="penaltyToggle" onchange="saveSetting('penalty',this.checked)"><span class="toggle-slider"></span></label></div>
+        <div class="toggle-row"><div class="toggle-label">Streak Bonus<small>Bonus XP per streak day</small></div><label class="toggle"><input type="checkbox" id="streakBonusToggle" onchange="saveSetting('streakBonus',this.checked)" checked><span class="toggle-slider"></span></label></div>
+        <div class="toggle-row"><div class="toggle-label">Daily Challenge</div><label class="toggle"><input type="checkbox" id="challengeToggle" onchange="saveSetting('challenge',this.checked)" checked><span class="toggle-slider"></span></label></div>
+        <div class="toggle-row"><div class="toggle-label">Boss Battle<small>Unlock after signing contract</small></div><label class="toggle"><input type="checkbox" id="bossToggle" onchange="saveSetting('boss',this.checked)" checked><span class="toggle-slider"></span></label></div>
+        <div class="toggle-row"><div class="toggle-label">Combo Multiplier<small>Chain completions for bonus XP</small></div><label class="toggle"><input type="checkbox" id="comboToggle" onchange="saveSetting('combo',this.checked)" checked><span class="toggle-slider"></span></label></div>
+        <div class="toggle-row"><div class="toggle-label">Power Hour<small>Random 2x XP windows</small></div><label class="toggle"><input type="checkbox" id="powerHourToggle" onchange="saveSetting('powerHour',this.checked)" checked><span class="toggle-slider"></span></label></div>
+        <div class="toggle-row"><div class="toggle-label">Confetti on Level Up</div><label class="toggle"><input type="checkbox" id="confettiToggle" onchange="saveSetting('confetti',this.checked)" checked><span class="toggle-slider"></span></label></div>
+        <div class="toggle-row"><div class="toggle-label">Sound Effects</div><label class="toggle"><input type="checkbox" id="soundToggle" onchange="saveSetting('sound',this.checked)"><span class="toggle-slider"></span></label></div>
+        <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
+          <div class="form-group"><label>Streak Bonus XP/day</label><input type="number" id="streakBonusXP" value="5" min="0" max="50" onchange="saveSetting('streakBonusXP',parseInt(this.value)||5)" style="max-width:90px"></div>
+          <div class="form-group"><label>Pomodoro Focus (min)</label><input type="number" id="pomoFocusMin" value="25" min="1" max="60" onchange="saveSetting('pomoFocus',parseInt(this.value)||25)" style="max-width:90px"></div>
+          <div class="form-group"><label>Pomodoro Break (min)</label><input type="number" id="pomoBreakMin" value="5" min="1" max="30" onchange="saveSetting('pomoBreak',parseInt(this.value)||5)" style="max-width:90px"></div>
+        </div>
+      </div>
+      <div class="settings-card">
+        <h3>🎨 Theme Colors</h3>
+        <div class="color-picker-row" id="colorPicker">
+          <div class="color-swatch active" style="background:linear-gradient(135deg,#00f5a0,#00d4ff)" data-accent="#00f5a0" data-accent2="#00d4ff" onclick="setAccentColor(this)"></div>
+          <div class="color-swatch" style="background:linear-gradient(135deg,#a29bfe,#6c5ce7)" data-accent="#a29bfe" data-accent2="#6c5ce7" onclick="setAccentColor(this)"></div>
+          <div class="color-swatch" style="background:linear-gradient(135deg,#fd79a8,#e84393)" data-accent="#fd79a8" data-accent2="#e84393" onclick="setAccentColor(this)"></div>
+          <div class="color-swatch" style="background:linear-gradient(135deg,#ffd93d,#ff9f43)" data-accent="#ffd93d" data-accent2="#ff9f43" onclick="setAccentColor(this)"></div>
+          <div class="color-swatch" style="background:linear-gradient(135deg,#55efc4,#00b894)" data-accent="#55efc4" data-accent2="#00b894" onclick="setAccentColor(this)"></div>
+          <div class="color-swatch" style="background:linear-gradient(135deg,#74b9ff,#0984e3)" data-accent="#74b9ff" data-accent2="#0984e3" onclick="setAccentColor(this)"></div>
+        </div>
+      </div>
+      <div class="settings-card" style="grid-column:1/-1">
+        <h3>📋 Manage Task XP</h3>
+        <div id="manageTasksList"></div>
+      </div>
+      <div class="settings-card">
+        <h3>💾 Export / Import</h3>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:12px">Save or restore your progress.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-primary btn-sm" onclick="exportData()">📤 Export</button>
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('importFile').click()">📥 Import</button>
+        </div>
+      </div>
+      <div class="settings-card">
+        <h3>⚠️ Danger Zone</h3>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:12px">Permanently reset all data.</p>
+        <button class="btn btn-danger btn-sm" onclick="confirmReset()">🗑️ Reset All Data</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /app-wrapper -->
+
+<script>
+/* ==================================================
+   CONSTANTS
+================================================== */
+const LEVEL_TITLES=["Novice","Apprentice","Warrior","Champion","Master","Grandmaster","Legend","Mythic","Immortal"];
+const LEVEL_THRESHOLDS=[0,100,300,600,1000,1500,2200,3000,4000,5500];
+const DIFF_MULTIPLIERS={easy:1,normal:1.5,hard:2,legendary:3};
+const DIFF_LABELS={easy:'⬢ Easy',normal:'◆ Normal',hard:'🔥 Hard',legendary:'💀 Legendary'};
+
+const CLASSES=[
+  {id:'coder',emoji:'💻',name:'Code Ninja',desc:'Master of algorithms and logic',bonus:'+15% XP for Code tasks',cat:'Code',mult:1.15},
+  {id:'scholar',emoji:'📚',name:'Scholar',desc:'Devoted to knowledge and study',bonus:'+15% XP for Study tasks',cat:'Study',mult:1.15},
+  {id:'ml_mage',emoji:'🧙',name:'ML Mage',desc:'Wielder of machine learning',bonus:'+20% XP for ML tasks',cat:'ML',mult:1.20},
+  {id:'monk',emoji:'🧘',name:'Zen Monk',desc:'Balance of mind and body',bonus:'+15% XP for Wellness tasks',cat:'Wellness',mult:1.15},
+  {id:'berserker',emoji:'⚔️',name:'Berserker',desc:'All-out effort every day',bonus:'+10% XP on ALL tasks',cat:'All',mult:1.10},
+  {id:'speedrunner',emoji:'🏃',name:'Speedrunner',desc:'Finish everything before noon',bonus:'+25% XP if done by noon',cat:'Time',mult:1.25},
+];
+
+const BOSSES=[
+  {name:'The Procrastinator',emoji:'😴',hp:200,reward:100,flavor:'He feeds on your laziness. Slay him!'},
+  {name:'The Distraction Drake',emoji:'🐉',hp:350,reward:180,flavor:'Each task is a strike against his scales!'},
+  {name:'The Doubt Demon',emoji:'👹',hp:500,reward:280,flavor:'Prove your worth — task by task!'},
+  {name:'The Chaos Titan',emoji:'🦖',hp:750,reward:400,flavor:'The ultimate test of discipline!'},
+];
+
+const LOOT_POOL=[
+  {emoji:'⚡',name:'XP Surge',desc:'+50 XP granted!',action:s=>{s.totalXP+=50;s.todayXP+=50}},
+  {emoji:'⚡',name:'Big XP Surge',desc:'+100 XP granted!',action:s=>{s.totalXP+=100;s.todayXP+=100}},
+  {emoji:'🛡️',name:'Streak Shield',desc:'Streak saver token granted!',action:s=>{s.streakSavers=Math.min((s.streakSavers||0)+1,3)}},
+  {emoji:'🍀',name:'Lucky Charm',desc:'2x XP for next 3 tasks!',action:s=>{s.luckyCharmTasks=3}},
+  {emoji:'⏱️',name:'Power Hour',desc:'2x XP for 30 minutes!',action:s=>{s.powerHourEnd=Date.now()+30*60*1000}},
+  {emoji:'💎',name:'Rare Gem',desc:'+200 XP and a streak saver!',action:s=>{s.totalXP+=200;s.todayXP+=200;s.streakSavers=Math.min((s.streakSavers||0)+1,3)}},
+];
+
+const DAILY_CHALLENGES=[
+  {emoji:'🧠',name:'Brain Boot',desc:'Study something new for 30 minutes',xp:30},
+  {emoji:'💻',name:'Code Sprint',desc:'Write 50 lines of clean code',xp:35},
+  {emoji:'📖',name:'Read & Learn',desc:'Read 10 pages of a technical book',xp:25},
+  {emoji:'🏃',name:'Clear Your Head',desc:'Take a 15-minute walk',xp:20},
+  {emoji:'📝',name:'Reflect Deeply',desc:'Write a journal entry',xp:20},
+  {emoji:'🔁',name:'Revision Round',desc:'Revise yesterday\'s notes',xp:25},
+  {emoji:'🎯',name:'Goal Setter',desc:'Plan tomorrow\'s priorities',xp:20},
+  {emoji:'🔬',name:'Deep Dive',desc:'1 hour on a single focused topic',xp:40},
+  {emoji:'📊',name:'Data Dive',desc:'Analyze or visualize a dataset',xp:35},
+  {emoji:'🛠️',name:'Build Something',desc:'Create a small project or prototype',xp:45},
+  {emoji:'⚡',name:'Speed Run',desc:'Complete all tasks before noon!',xp:50},
+];
+
+const ACHIEVEMENT_DEFS=[
+  {id:'first_blood',emoji:'⚔️',name:'First Blood',desc:'Complete your first task',check:s=>s.totalCompleted>=1},
+  {id:'xp_100',emoji:'⚡',name:'Centurion',desc:'Reach 100 total XP',check:s=>s.totalXP>=100},
+  {id:'xp_500',emoji:'💥',name:'Power Surge',desc:'Reach 500 total XP',check:s=>s.totalXP>=500},
+  {id:'xp_1000',emoji:'🌟',name:'Star Power',desc:'Reach 1,000 total XP',check:s=>s.totalXP>=1000},
+  {id:'xp_5000',emoji:'🚀',name:'Rocket Fuel',desc:'Reach 5,000 total XP',check:s=>s.totalXP>=5000},
+  {id:'level_3',emoji:'🔥',name:'On Fire',desc:'Reach Level 3',check:s=>calcLevel(s.totalXP)>=3},
+  {id:'level_5',emoji:'🏆',name:'Champion',desc:'Reach Level 5',check:s=>calcLevel(s.totalXP)>=5},
+  {id:'streak_3',emoji:'🔗',name:'Chain Builder',desc:'3-day streak',check:s=>s.streak>=3},
+  {id:'streak_7',emoji:'🌈',name:'Week Warrior',desc:'7-day streak',check:s=>s.streak>=7},
+  {id:'streak_30',emoji:'💎',name:'Diamond Grind',desc:'30-day streak',check:s=>s.streak>=30},
+  {id:'tasks_10',emoji:'📋',name:'Task Slayer',desc:'Complete 10 tasks',check:s=>s.totalCompleted>=10},
+  {id:'tasks_50',emoji:'⚡',name:'Quest Machine',desc:'Complete 50 tasks',check:s=>s.totalCompleted>=50},
+  {id:'tasks_100',emoji:'🤖',name:'Automation',desc:'Complete 100 tasks',check:s=>s.totalCompleted>=100},
+  {id:'all_today',emoji:'🌙',name:'Perfect Day',desc:'Complete all tasks in one day',check:s=>s.tasks.length>0&&s.tasks.every(t=>t.completed)},
+  {id:'challenge_done',emoji:'🎯',name:'Daily Challenger',desc:'Complete a daily challenge',check:s=>s.totalChallengesCompleted>=1},
+  {id:'boss_slain',emoji:'🗡️',name:'Boss Slayer',desc:'Defeat your first boss',check:s=>s.bossesDefeated>=1},
+  {id:'boss_5',emoji:'⚔️',name:'Boss Hunter',desc:'Defeat 5 bosses',check:s=>s.bossesDefeated>=5},
+  {id:'combo_5',emoji:'🔥',name:'Combo King',desc:'Reach a 5x combo',check:s=>s.maxCombo>=5},
+  {id:'loot_open',emoji:'📦',name:'Looter',desc:'Open a loot box',check:s=>s.lootBoxesOpened>=1},
+  {id:'pomo_10',emoji:'⏱️',name:'Deep Focus',desc:'Complete 10 Pomodoro sessions',check:s=>s.totalPomodoros>=10},
+  {id:'class_chosen',emoji:'🎓',name:'Classed Up',desc:'Choose a class',check:s=>!!s.selectedClass},
+  {id:'contract_signed',emoji:'📜',name:'Committed',desc:'Sign your first contract',check:s=>s.totalContractsSigned>=1},
+  {id:'days_7',emoji:'📆',name:'Week Starter',desc:'Active for 7 days',check:s=>s.daysActive>=7},
+  {id:'days_30',emoji:'🗓️',name:'Monthly Hero',desc:'Active for 30 days',check:s=>s.daysActive>=30},
+];
+
+const DEFAULT_TASKS=[
+  {id:1,name:'Deep Study (Morning)',xp:20,category:'Study',difficulty:'hard',completed:false},
+  {id:2,name:'Evening Study',xp:15,category:'Study',difficulty:'normal',completed:false},
+  {id:3,name:'ML Learning',xp:25,category:'ML',difficulty:'hard',completed:false},
+  {id:4,name:'Coding Practice',xp:20,category:'Code',difficulty:'normal',completed:false},
+  {id:5,name:'Daily Reflection',xp:10,category:'Wellness',difficulty:'easy',completed:false},
+];
+
+const DEFAULT_SETTINGS={
+  penalty:false,streakBonus:true,streakBonusXP:5,
+  confetti:true,sound:false,challenge:true,
+  boss:true,combo:true,powerHour:true,
+  theme:'dark',accent:'#00f5a0',accent2:'#00d4ff',
+  pomoFocus:25,pomoBreak:5,
+};
+
+/* ==================================================
+   STATE
+================================================== */
+let state={
+  tasks:[],totalXP:0,todayXP:0,
+  streak:0,maxStreak:0,totalCompleted:0,daysActive:0,
+  lastDate:null,
+  weeklyXP:[0,0,0,0,0,0,0],
+  streakHistory:[0,0,0,0,0,0,0],
+  settings:{...DEFAULT_SETTINGS},
+  achievements:{},
+  editingTaskId:null,
+  dailyChallenge:null,
+  totalChallengesCompleted:0,
+  totalPomodoros:0,
+  activeFilter:'All',
+  // New in v3
+  selectedClass:null,
+  currentBoss:null,            // {bossIdx, currentHP, maxHP, date}
+  bossesDefeated:0,
+  contractSigned:false,        // Today's contract
+  contractDate:null,
+  totalContractsSigned:0,
+  comboCount:0,
+  maxCombo:0,
+  lastTaskCompletedTime:0,
+  lootBoxesOpened:0,
+  lootBoxPending:false,
+  streakSavers:0,
+  luckyCharmTasks:0,
+  powerHourEnd:0,
+  bestDayXP:0,
+  bestSingleDayTasks:0,
+  fastestAllComplete:null,     // ms since day start
+  allCompleteTime:null,
+};
+
+/* ==================================================
+   PERSISTENCE
+================================================== */
+function saveState(){localStorage.setItem('levelup_v3',JSON.stringify(state))}
+function loadState(){
+  const s=localStorage.getItem('levelup_v3');
+  if(s){
+    try{
+      const p=JSON.parse(s);
+      state={...state,...p};
+      state.settings={...DEFAULT_SETTINGS,...(p.settings||{})};
+      state.achievements=p.achievements||{};
+    }catch(e){initDefault()}
+  }else{initDefault()}
+}
+function initDefault(){
+  state.tasks=JSON.parse(JSON.stringify(DEFAULT_TASKS));
+  state.lastDate=getTodayStr();
+}
+
+/* ==================================================
+   DATE / DAY
+================================================== */
+function getTodayStr(){return new Date().toISOString().split('T')[0]}
+function checkNewDay(){
+  const today=getTodayStr();
+  if(state.lastDate!==today){
+    const yesterday=new Date();yesterday.setDate(yesterday.getDate()-1);
+    const yStr=yesterday.toISOString().split('T')[0];
+    if(state.lastDate===yStr){
+      if(state.tasks.some(t=>t.completed)){
+        state.streak++;state.maxStreak=Math.max(state.maxStreak,state.streak);
+      }else{
+        if(state.streakSavers>0){state.streakSavers--;} // auto-consume saver
+        else{
+          if(state.settings.penalty){const pen=state.tasks.reduce((s,t)=>!t.completed?s+Math.floor(t.xp*.5):s,0);state.totalXP=Math.max(0,state.totalXP-pen)}
+          state.streak=0;
+        }
+      }
+    }else{state.streak=0}
+    // Record best day
+    if(state.todayXP>state.bestDayXP)state.bestDayXP=state.todayXP;
+    const doneToday=state.tasks.filter(t=>t.completed).length;
+    if(doneToday>state.bestSingleDayTasks)state.bestSingleDayTasks=doneToday;
+    state.weeklyXP.shift();state.weeklyXP.push(state.todayXP);
+    state.streakHistory.shift();state.streakHistory.push(state.tasks.some(t=>t.completed)?1:0);
+    if(state.tasks.some(t=>t.completed))state.daysActive++;
+    state.tasks=state.tasks.map(t=>({...t,completed:false}));
+    state.todayXP=0;state.comboCount=0;state.lastDate=today;
+    state.contractSigned=false;state.contractDate=null;
+    state.allCompleteTime=null;
+    if(state.dailyChallenge&&state.dailyChallenge.date!==today)state.dailyChallenge=null;
+    if(state.currentBoss&&state.currentBoss.date!==today)state.currentBoss=null;
+    saveState();
+  }
+  if(state.settings.challenge&&!state.dailyChallenge)generateDailyChallenge();
+  if(state.settings.boss&&state.contractSigned&&!state.currentBoss)spawnBoss();
+}
+
+/* ==================================================
+   LEVEL SYSTEM
+================================================== */
+function calcLevel(xp){
+  let l=1;for(let i=1;i<LEVEL_THRESHOLDS.length;i++){if(xp>=LEVEL_THRESHOLDS[i])l=i+1;else break}return l;
+}
+function getLevelProgress(xp){
+  const l=calcLevel(xp);
+  const cur=LEVEL_THRESHOLDS[l-1]||0;const next=LEVEL_THRESHOLDS[l]||(cur+1000);
+  return{level:l,progress:Math.min(100,((xp-cur)/(next-cur))*100),remaining:next-xp,cur,next};
+}
+
+/* ==================================================
+   XP CALCULATION (with class, difficulty, combo, power hour, lucky charm)
+================================================== */
+function calcXPGain(task){
+  let xp=task.xp;
+  const diff=task.difficulty||'normal';
+  xp=Math.round(xp*DIFF_MULTIPLIERS[diff]);
+  // Class bonus
+  const cls=CLASSES.find(c=>c.id===state.selectedClass);
+  if(cls){
+    if(cls.cat==='All')xp=Math.round(xp*cls.mult);
+    else if(cls.cat==='Time'){
+      const hour=new Date().getHours();
+      if(hour<12)xp=Math.round(xp*cls.mult);
+    }else if(cls.cat===task.category)xp=Math.round(xp*cls.mult);
+  }
+  // Streak bonus
+  if(state.settings.streakBonus&&state.streak>0)xp+=state.settings.streakBonusXP;
+  // Combo multiplier
+  if(state.settings.combo&&state.comboCount>=2){
+    const mult=Math.min(1+state.comboCount*0.1,2.5);
+    xp=Math.round(xp*mult);
+  }
+  // Power Hour
+  if(state.settings.powerHour&&isPowerHour())xp=Math.round(xp*2);
+  // Lucky charm
+  if(state.luckyCharmTasks>0)xp=Math.round(xp*2);
+  return xp;
+}
+function isPowerHour(){return Date.now()<(state.powerHourEnd||0)}
+
+/* ==================================================
+   COMBO SYSTEM
+================================================== */
+const COMBO_WINDOW=10*60*1000; // 10 minutes
+function updateCombo(){
+  const now=Date.now();
+  if(now-state.lastTaskCompletedTime<COMBO_WINDOW){
+    state.comboCount++;
+    state.maxCombo=Math.max(state.maxCombo,state.comboCount);
+    if(state.comboCount>=2&&state.settings.combo)showComboBanner();
+  }else{state.comboCount=1}
+  state.lastTaskCompletedTime=now;
+}
+let comboBannerTimeout=null;
+function showComboBanner(){
+  document.getElementById('comboNum').textContent=state.comboCount;
+  const b=document.getElementById('comboBanner');
+  b.classList.add('show');
+  clearTimeout(comboBannerTimeout);
+  comboBannerTimeout=setTimeout(()=>b.classList.remove('show'),2500);
+}
+
+/* ==================================================
+   TASK MANAGEMENT
+================================================== */
+function addTask(){
+  const name=document.getElementById('newTaskName').value.trim();
+  const xp=parseInt(document.getElementById('newTaskXP').value)||10;
+  const catSel=document.getElementById('newTaskCategory').value;
+  const customCat=document.getElementById('customCategoryInput').value.trim();
+  const category=catSel==='Custom'?(customCat||'General'):catSel;
+  const difficulty=document.getElementById('newTaskDiff').value;
+  if(!name){document.getElementById('newTaskName').focus();return}
+  state.tasks.push({id:Date.now(),name,xp,category,difficulty,completed:false});
+  document.getElementById('newTaskName').value='';
+  document.getElementById('newTaskXP').value='10';
+  toggleAddForm(false);saveState();renderAll();playSound('click');
+}
+function deleteTask(id){state.tasks=state.tasks.filter(t=>t.id!==id);saveState();renderAll()}
+function openEditModal(id){
+  const t=state.tasks.find(x=>x.id===id);if(!t)return;
+  state.editingTaskId=id;
+  document.getElementById('editTaskName').value=t.name;
+  document.getElementById('editTaskXP').value=t.xp;
+  document.getElementById('editTaskCategory').value=t.category;
+  document.getElementById('editTaskDiff').value=t.difficulty||'normal';
+  document.getElementById('editModal').classList.add('show');
+}
+function closeEditModal(){document.getElementById('editModal').classList.remove('show');state.editingTaskId=null}
+function saveEditTask(){
+  const t=state.tasks.find(x=>x.id===state.editingTaskId);if(!t)return;
+  t.name=document.getElementById('editTaskName').value.trim()||t.name;
+  t.xp=parseInt(document.getElementById('editTaskXP').value)||t.xp;
+  t.category=document.getElementById('editTaskCategory').value.trim()||t.category;
+  t.difficulty=document.getElementById('editTaskDiff').value;
+  closeEditModal();saveState();renderAll();
+}
+function toggleTask(id){
+  const t=state.tasks.find(x=>x.id===id);if(!t)return;
+  const prevLevel=calcLevel(state.totalXP);
+  if(!t.completed){
+    t.completed=true;
+    updateCombo();
+    const gain=calcXPGain(t);
+    state.totalXP+=gain;state.todayXP+=gain;state.totalCompleted++;
+    if(state.luckyCharmTasks>0)state.luckyCharmTasks--;
+    spawnXPPopup(gain,`task-${id}`);playSound('complete');
+    // Boss damage
+    if(state.currentBoss&&!state.currentBoss.defeated){
+      const dmg=Math.round(gain/2);
+      state.currentBoss.currentHP=Math.max(0,state.currentBoss.currentHP-dmg);
+      hurtBossSprite();
+      if(state.currentBoss.currentHP<=0)defeatBoss();
+    }
+    // Check all complete
+    if(state.tasks.every(x=>x.completed)&&!state.allCompleteTime){
+      state.allCompleteTime=Date.now();
+      if(!state.bestFastestAllComplete||state.allCompleteTime-getDayStart()<state.bestFastestAllComplete){
+        state.bestFastestAllComplete=state.allCompleteTime-getDayStart();
+      }
+      setTimeout(()=>{triggerLootBox();},800);
+    }
+    const newLevel=calcLevel(state.totalXP);
+    if(newLevel>prevLevel)setTimeout(()=>showLevelUp(newLevel),600);
+  }else{
+    t.completed=false;
+    state.totalXP=Math.max(0,state.totalXP-t.xp);
+    state.todayXP=Math.max(0,state.todayXP-t.xp);
+    state.totalCompleted=Math.max(0,state.totalCompleted-1);
+    state.comboCount=0;
+  }
+  saveState();checkAchievements();renderAll();
+}
+function getDayStart(){
+  const d=new Date();d.setHours(0,0,0,0);return d.getTime();
+}
+function handleTaskCheck(id){
+  toggleTask(id);
+  setTimeout(()=>{const el=document.getElementById(`task-${id}`);if(el){el.classList.add('just-completed');setTimeout(()=>el.classList.remove('just-completed'),600)}},10);
+}
+
+/* ==================================================
+   BOSS BATTLE
+================================================== */
+function spawnBoss(){
+  const idx=state.bossesDefeated%BOSSES.length;
+  const boss=BOSSES[idx];
+  state.currentBoss={bossIdx:idx,currentHP:boss.hp,maxHP:boss.hp,date:getTodayStr(),defeated:false};
+  saveState();
+}
+function hurtBossSprite(){
+  // Trigger canvas hurt animation
+  if(battleAnim){
+    battleAnim.bossHurt=true;battleAnim.bossHurtTimer=0.5;battleAnim.shake=14;
+    spawnParticles(battleAnim.bossX,battleAnim.bossY-60,'#ff6b6b',10);
+  }
+}
+function defeatBoss(){
+  state.currentBoss.defeated=true;
+  state.bossesDefeated++;
+  const boss=BOSSES[state.currentBoss.bossIdx];
+  state.totalXP+=boss.reward;state.todayXP+=boss.reward;
+  if(battleAnim){
+    battleAnim.bossDead=true;
+    battleAnim.bossDeathTimer=0.01;
+    battleAnim.phase='victory';
+    spawnParticles(battleAnim.bossX,battleAnim.bossY-80,'#ffd93d',30);
+    spawnParticles(battleAnim.bossX,battleAnim.bossY-60,'#ff6b6b',20);
+    spawnParticles(battleAnim.bossX,battleAnim.bossY-40,'#a29bfe',15);
+    battleAnim.floatingTexts.push({x:battleAnim.W/2,y:battleAnim.H/2,text:`+${boss.reward} XP 🏆`,color:'#ffd93d',life:3,alpha:1,size:24});
+  }
+  // Stop auto-fight
+  if(autoFightTimer){clearInterval(autoFightTimer);autoFightActive=false;}
+  playSound('levelup');
+  launchConfetti();
+  saveState();checkAchievements();
+  // Update HUD
+  const logEl=document.getElementById('battleLogText');
+  if(logEl)logEl.textContent=`🏆 BOSS DEFEATED! +${boss.reward} XP claimed! You are unstoppable!`;
+  const atBtn=document.getElementById('battleAttackBtn');if(atBtn)atBtn.disabled=true;
+  renderDashboard();
+}
+
+/* ==================================================
+   COMMITMENT CONTRACT
+================================================== */
+function signContract(){
+  state.contractSigned=true;state.contractDate=getTodayStr();
+  state.totalContractsSigned++;
+  if(state.settings.boss&&!state.currentBoss)spawnBoss();
+  saveState();checkAchievements();renderAll();
+  playSound('complete');
+}
+
+/* ==================================================
+   LOOT BOX
+================================================== */
+function triggerLootBox(){
+  document.getElementById('lootOverlay').classList.add('show');
+  document.getElementById('lootBox').className='loot-box';
+  document.getElementById('lootReward').style.display='none';
+}
+function openLootBox(){
+  const box=document.getElementById('lootBox');
+  box.classList.add('opened');
+  state.lootBoxesOpened++;
+  const reward=LOOT_POOL[Math.floor(Math.random()*LOOT_POOL.length)];
+  reward.action(state);
+  saveState();checkAchievements();
+  setTimeout(()=>{
+    document.getElementById('lootRewardEmoji').textContent=reward.emoji;
+    document.getElementById('lootRewardName').textContent=reward.name;
+    document.getElementById('lootRewardDesc').textContent=reward.desc;
+    document.getElementById('lootReward').style.display='block';
+    renderAll();
+  },600);
+}
+function closeLootBox(){document.getElementById('lootOverlay').classList.remove('show')}
+
+/* ==================================================
+   DAILY CHALLENGE
+================================================== */
+function generateDailyChallenge(){
+  const today=getTodayStr();
+  const idx=parseInt(today.replace(/-/g,''))%DAILY_CHALLENGES.length;
+  state.dailyChallenge={challenge:DAILY_CHALLENGES[idx],date:today,completed:false};saveState();
+}
+function completeChallenge(){
+  if(!state.dailyChallenge||state.dailyChallenge.completed)return;
+  const prevLevel=calcLevel(state.totalXP);
+  state.dailyChallenge.completed=true;
+  const xp=state.dailyChallenge.challenge.xp;
+  state.totalXP+=xp;state.todayXP+=xp;state.totalChallengesCompleted++;
+  spawnXPPopup(xp,'dailyChallengeContainer');playSound('complete');
+  const newLevel=calcLevel(state.totalXP);
+  if(newLevel>prevLevel)setTimeout(()=>showLevelUp(newLevel),600);
+  saveState();checkAchievements();renderAll();
+}
+
+/* ==================================================
+   POWER HOUR
+================================================== */
+function activatePowerHour(){
+  state.powerHourEnd=Date.now()+30*60*1000;saveState();renderAll();
+}
+
+/* ==================================================
+   ACHIEVEMENT SYSTEM
+================================================== */
+function checkAchievements(){
+  let newOnes=[];
+  ACHIEVEMENT_DEFS.forEach(def=>{if(!state.achievements[def.id]&&def.check(state)){state.achievements[def.id]=true;newOnes.push(def)}});
+  if(newOnes.length){saveState();newOnes.forEach((a,i)=>setTimeout(()=>showAchievementToast(a),i*1600));renderAchievements&&renderAchievements()}
+}
+function showAchievementToast(a){
+  document.getElementById('toastIcon').textContent=a.emoji;
+  document.getElementById('toastText').textContent=a.name+' — '+a.desc;
+  const t=document.getElementById('achievementToast');t.classList.add('show');playSound('complete');
+  setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+/* ==================================================
+   EXPORT / IMPORT
+================================================== */
+function exportData(){
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');
+  a.href=url;a.download=`levelup-backup-${getTodayStr()}.json`;a.click();URL.revokeObjectURL(url);
+}
+function importData(event){
+  const file=event.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const p=JSON.parse(e.target.result);
+      if(p.tasks&&p.totalXP!==undefined){
+        state={...state,...p};state.settings={...DEFAULT_SETTINGS,...(p.settings||{})};state.achievements=p.achievements||{};
+        saveState();applyAccentColor();renderAll();alert('✅ Imported!');
+      }else alert('❌ Invalid file');
+    }catch{alert('❌ Could not read file')}
+  };reader.readAsText(file);event.target.value='';
+}
+
+/* ==================================================
+   COUNTDOWN CLOCK
+================================================== */
+function updateCountdown(){
+  const now=new Date();
+  const midnight=new Date(now);midnight.setHours(24,0,0,0);
+  const ms=midnight-now;
+  const h=Math.floor(ms/3600000);const m=Math.floor((ms%3600000)/60000);const s=Math.floor((ms%60000)/1000);
+  const text=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')} left today`;
+  const el=document.getElementById('dayCountdown');
+  const textEl=document.getElementById('countdownText');
+  if(textEl)textEl.textContent=text;
+  if(el){
+    if(h<2){el.className='day-countdown urgent'}
+    else if(h<5){el.className='day-countdown warning'}
+    else{el.className='day-countdown normal'}
+  }
+}
+
+/* ==================================================
+   RENDER
+================================================== */
+function renderAll(){
+  renderDashboard();
+  renderTaskList('dashTaskList',true);
+  renderTaskList('fullTaskList',false);
+  renderCategoryFilters();
+  if(document.getElementById('panel-boss').classList.contains('active'))renderBoss();
+  if(document.getElementById('panel-achievements').classList.contains('active'))renderAchievements();
+  if(document.getElementById('panel-stats').classList.contains('active'))renderStats();
+}
+
+function renderDashboard(){
+  const{level,progress,remaining,cur,next}=getLevelProgress(state.totalXP);
+  const completed=state.tasks.filter(t=>t.completed).length;
+  const total=state.tasks.length;
+  const pct=total?Math.round((completed/total)*100):0;
+
+  document.getElementById('dashTotalXP').textContent=state.totalXP.toLocaleString();
+  document.getElementById('dashTodayXP').textContent=state.todayXP.toLocaleString();
+  document.getElementById('dashStreak').textContent=state.streak;
+  document.getElementById('dashCompletion').textContent=pct+'%';
+  document.getElementById('dashCombo').textContent='x'+(state.comboCount||1);
+  document.getElementById('levelOrb').textContent=level;
+  document.getElementById('levelTitle').textContent=LEVEL_TITLES[Math.min(level-1,LEVEL_TITLES.length-1)];
+  document.getElementById('levelSubtitle').textContent=getLevelQuote(level);
+  const cls=CLASSES.find(c=>c.id===state.selectedClass);
+  document.getElementById('classBadge').textContent=cls?(cls.emoji+' '+cls.name):'No Class — visit Skills tab';
+  document.getElementById('xpToNext').textContent=remaining.toLocaleString()+' XP';
+  document.getElementById('levelProgressBar').style.width=progress+'%';
+  document.getElementById('progressLabelLeft').textContent=cur.toLocaleString()+' XP';
+  document.getElementById('progressLabelRight').textContent=next.toLocaleString()+' XP';
+
+  // Streak dots
+  const sc=document.getElementById('streakDots');sc.innerHTML='';
+  const days=['M','T','W','T','F','S','S'];const today=new Date().getDay();
+  state.streakHistory.forEach((active,i)=>{
+    const d=document.createElement('div');d.className='streak-dot'+(active?' active':'');
+    const di=(today-6+i+7)%7;d.title=days[di===0?6:di-1];d.textContent=active?'🔥':'·';sc.appendChild(d);
+  });
+  const td=document.createElement('div');td.className='streak-dot'+(pct===100?' active':'');
+  td.textContent=pct===100?'🔥':'·';td.title='Today';sc.appendChild(td);
+
+  // Streak saver badge
+  const ssb=document.getElementById('streakSaverBadge');
+  ssb.innerHTML=state.streakSavers>0?`<div class="streak-saver-badge">🛡️ ${state.streakSavers} Streak Saver${state.streakSavers>1?'s':''} available</div>`:'';
+
+  // Daily challenge
+  renderDailyChallenge();
+
+  // Power hour
+  const phb=document.getElementById('powerHourBanner');
+  if(isPowerHour()){
+    const minLeft=Math.ceil((state.powerHourEnd-Date.now())/60000);
+    phb.innerHTML=`<div class="power-hour-badge"><div class="dot"></div>⚡ POWER HOUR ACTIVE — 2x XP for ${minLeft} more minutes!</div>`;
+  }else phb.innerHTML='';
+
+  // Almost there banner
+  renderAlmostThere(pct,completed,total);
+
+  // Contract
+  renderContract(pct);
+}
+
+function renderAlmostThere(pct,completed,total){
+  const banner=document.getElementById('almostThereBanner');
+  const remaining=total-completed;
+  const xpLeft=state.tasks.filter(t=>!t.completed).reduce((s,t)=>s+t.xp,0);
+  const ghostXP=state.settings.penalty?Math.round(xpLeft*.5):0;
+  if(pct>=60&&pct<100&&remaining>0){
+    let msg='',icon='💪';
+    if(pct>=90){msg=`Just ${remaining} quest${remaining>1?'s':''} left! You're SO close!`;icon='🔥'}
+    else if(pct>=80){msg=`${remaining} quests left — finish strong!`;icon='⚡'}
+    else{msg=`${remaining} quests remain. Build momentum!`;icon='💪'}
+    banner.innerHTML=`<div class="almost-banner">
+      <div class="icon">${icon}</div>
+      <div style="flex:1">
+        <h3>${msg}</h3>
+        <p>+${xpLeft} XP waiting for you today</p>
+      </div>
+      ${ghostXP>0?`<div class="ghost-xp-badge">-${ghostXP} XP at midnight</div>`:''}
+    </div>`;
+  }else banner.innerHTML='';
+}
+
+function renderContract(pct){
+  // Contract card goes before tasks in dashboard — we inject it into dailyChallengeContainer sibling
+  // Actually render in a dedicated spot below challenge
+  const existing=document.getElementById('contractSection');
+  let container=existing;
+  if(!container){
+    container=document.createElement('div');container.id='contractSection';
+    const dc=document.getElementById('dailyChallengeContainer');
+    dc.parentNode.insertBefore(container,dc.nextSibling);
+  }
+  const totalPotential=state.tasks.reduce((s,t)=>s+calcXPGain(t),0);
+  if(!state.contractSigned){
+    container.innerHTML=`<div class="contract-card" style="margin-bottom:20px">
+      <div class="contract-top">
+        <div class="contract-icon">📜</div>
+        <div class="contract-info" style="flex:1">
+          <h3>Sign Today's Contract</h3>
+          <p>Commit to completing all ${state.tasks.length} quests today. See exactly what you'll earn.</p>
+          <div class="contract-reward">${totalPotential.toLocaleString()} XP<span>if you complete everything</span></div>
+        </div>
+        <button class="btn btn-purple btn-sm" onclick="signContract()" style="align-self:center">✍️ Sign Contract</button>
+      </div>
+    </div>`;
+  }else{
+    container.innerHTML=`<div class="contract-card contract-signed" style="margin-bottom:20px">
+      <div class="contract-top">
+        <div class="contract-icon">✅</div>
+        <div class="contract-info" style="flex:1">
+          <h3>Contract Signed — Hold the line!</h3>
+          <p>You committed to ${state.tasks.length} quests today.</p>
+          <div class="contract-reward">${totalPotential.toLocaleString()} XP<span>potential today</span></div>
+          <div class="contract-signed-label">⚔️ Boss Battle unlocked!</div>
+        </div>
+        <div style="text-align:right;font-family:var(--font-head);font-size:24px;font-weight:900;color:var(--accent)">${pct}%</div>
+      </div>
+    </div>`;
+  }
+}
+
+function renderDailyChallenge(){
+  const c=document.getElementById('dailyChallengeContainer');
+  if(!state.settings.challenge||!state.dailyChallenge){c.innerHTML='';return}
+  const ch=state.dailyChallenge;const done=ch.completed;
+  const ms=getMsUntilMidnight();const h=Math.floor(ms/3600000);const m=Math.floor((ms%3600000)/60000);
+  c.innerHTML=`<div class="challenge-card ${done?'opacity-60':''}">
+    <div class="challenge-top">
+      <div class="challenge-icon">${ch.challenge.emoji}</div>
+      <div class="challenge-info" style="flex:1">
+        <h3>${escHtml(ch.challenge.name)}</h3>
+        <p>${escHtml(ch.challenge.desc)}</p>
+        <div class="challenge-timer">⏰ Resets in ${h}h ${m}m</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
+        <div style="font-family:var(--font-head);font-size:18px;font-weight:900;color:#ffd93d">+${ch.challenge.xp} XP</div>
+        ${done?'<span style="font-size:11px;color:var(--accent);font-weight:700">✓ CLAIMED</span>':`<button class="btn btn-warning btn-sm" onclick="completeChallenge()">🎯 Complete</button>`}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderTaskList(containerId,preview){
+  const container=document.getElementById(containerId);if(!container)return;
+  let tasks=state.tasks;
+  if(containerId==='fullTaskList'&&state.activeFilter!=='All')tasks=tasks.filter(t=>t.category===state.activeFilter);
+  if(preview)tasks=tasks.slice(0,5);
+  if(tasks.length===0){container.innerHTML=`<div class="empty-state"><div class="icon">📋</div><p>No quests here.</p></div>`;return}
+  container.innerHTML=tasks.map(task=>{
+    const diff=task.difficulty||'normal';
+    const effXP=calcXPGain(task);
+    const boosted=effXP>task.xp;
+    return`<div class="task-item ${task.completed?'completed':''} ${diff==='legendary'?'legendary':''}" id="task-${task.id}">
+      <div class="task-checkbox" onclick="handleTaskCheck(${task.id})">${task.completed?'✓':''}</div>
+      <div class="task-content">
+        <div class="task-name">${escHtml(task.name)}</div>
+        <div class="task-meta">
+          <span class="task-xp ${boosted?'boosted':''}">⚡ ${effXP} XP${boosted?` (base: ${task.xp})`:''}${task.completed?'':''}</span>
+          <span class="task-category">${escHtml(task.category)}</span>
+          <span class="difficulty-badge diff-${diff}">${DIFF_LABELS[diff]}</span>
+        </div>
+      </div>
+      <div class="task-actions">
+        <button class="task-btn pomo" onclick="launchPomoForTask(${task.id})" title="Pomodoro">🍅</button>
+        <button class="task-btn edit" onclick="openEditModal(${task.id})" title="Edit">✏️</button>
+        <button class="task-btn delete" onclick="deleteTask(${task.id})" title="Delete">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderCategoryFilters(){
+  const c=document.getElementById('categoryFilters');if(!c)return;
+  const cats=['All',...new Set(state.tasks.map(t=>t.category))];
+  c.innerHTML=cats.map(cat=>`<button class="filter-pill ${state.activeFilter===cat?'active':''}" onclick="setFilter('${cat}')">${cat}</button>`).join('');
+}
+function setFilter(cat){state.activeFilter=cat;renderCategoryFilters();renderTaskList('fullTaskList',false)}
+
+/* ==================================================
+   BOSS BATTLE — CANVAS ANIMATION ENGINE
+================================================== */
+let battleRAF = null;
+let battleCtx = null;
+let battleCanvas = null;
+let battleAnim = {
+  running: false,
+  time: 0,
+  // Hero
+  heroX: 0, heroY: 0,
+  heroHP: 0, heroMaxHP: 0,
+  heroAttacking: false, heroAttackTimer: 0,
+  heroHurt: false, heroHurtTimer: 0,
+  heroDead: false,
+  // Boss
+  bossX: 0, bossY: 0,
+  bossHP: 0, bossMaxHP: 0,
+  bossAttacking: false, bossAttackTimer: 0,
+  bossHurt: false, bossHurtTimer: 0,
+  bossDead: false,
+  bossDeathTimer: 0,
+  // Projectiles / effects
+  projectiles: [],
+  particles: [],
+  floatingTexts: [],
+  // Ground
+  groundY: 0,
+  // Battle state
+  phase: 'idle', // idle | fighting | victory | defeat
+  xpPower: 0,
+  battleLog: '',
+  autoFightInterval: null,
+  shake: 0,
+};
+
+const HERO_CLASSES_SPRITES = {
+  coder:     { body:'#00d4ff', hair:'#ffd93d', weapon:'💻' },
+  scholar:   { body:'#a29bfe', hair:'#e8c77b', weapon:'📖' },
+  ml_mage:   { body:'#fd79a8', hair:'#fff', weapon:'🔮' },
+  monk:      { body:'#55efc4', hair:'#333', weapon:'🙏' },
+  berserker: { body:'#ff6b6b', hair:'#c0392b', weapon:'⚔️' },
+  speedrunner:{ body:'#ffd93d', hair:'#e67e22', weapon:'🏃' },
+  default:   { body:'#00f5a0', hair:'#74b9ff', weapon:'⚡' },
+};
+
+const BOSS_SPRITES = [
+  { color:'#6c3483', eyeColor:'#ffd93d', size:1.0, horns:true,  wings:false, tail:true  }, // Procrastinator
+  { color:'#1a5276', eyeColor:'#e74c3c', size:1.3, horns:true,  wings:true,  tail:true  }, // Distraction Drake
+  { color:'#922b21', eyeColor:'#8e44ad', size:1.5, horns:true,  wings:false, tail:false }, // Doubt Demon
+  { color:'#1b2631', eyeColor:'#f39c12', size:1.8, horns:true,  wings:true,  tail:true  }, // Chaos Titan
+];
+
+function renderBoss() {
+  const container = document.getElementById('bossContainer');
+  if (!container) return;
+
+  if (!state.contractSigned) {
+    container.innerHTML = `<div style="text-align:center;padding:60px 20px">
+      <div style="font-size:60px;margin-bottom:16px">🔒</div>
+      <div style="font-family:var(--font-head);font-size:20px;color:var(--text2);margin-bottom:10px">Boss Battle Locked</div>
+      <p style="color:var(--text3);margin-bottom:20px;font-size:14px">Sign today's contract on the Dashboard to unlock the Boss Battle.</p>
+      <button class="btn btn-primary" onclick="switchTab('dashboard')">Go to Dashboard →</button>
+    </div>`;
+    stopBattleAnimation();
+    return;
+  }
+
+  if (!state.currentBoss) {
+    container.innerHTML = `<div style="text-align:center;padding:60px 20px">
+      <div style="font-size:60px;margin-bottom:16px">✅</div>
+      <div style="font-family:var(--font-head);font-size:18px;color:var(--accent)">No boss today!</div>
+      <p style="color:var(--text3);margin-top:8px;font-size:13px">Come back tomorrow after signing a contract.</p>
+    </div>`;
+    stopBattleAnimation();
+    return;
+  }
+
+  const b = state.currentBoss;
+  const boss = BOSSES[b.bossIdx];
+  const heroHPMax = 100 + calcLevel(state.totalXP) * 20;
+  const heroHP = Math.max(0, heroHPMax - Math.floor((b.maxHP - b.currentHP) * 0.3));
+  const bossHPPct = Math.round((b.currentHP / b.maxHP) * 100);
+  const heroHPPct = Math.round((heroHP / heroHPMax) * 100);
+
+  container.innerHTML = `
+    <div class="battle-arena-wrap">
+      <div class="battle-canvas-container">
+        <canvas id="battleCanvas" width="800" height="320"></canvas>
+        <div class="battle-ui-overlay">
+          <div class="battle-hp-block">
+            <div class="battle-hp-name hero-name">⚔️ YOU — LV${calcLevel(state.totalXP)}</div>
+            <div class="battle-hp-bar-bg"><div class="battle-hp-bar-fill hero-hp-fill" id="heroHPBar" style="width:${heroHPPct}%"></div></div>
+            <div class="battle-hp-text hero-hp-text" id="heroHPText">${heroHP} / ${heroHPMax} HP</div>
+          </div>
+          <div class="battle-vs">VS</div>
+          <div class="battle-hp-block">
+            <div class="battle-hp-name boss-name-hud">${boss.name} 👹</div>
+            <div class="battle-hp-bar-bg"><div class="battle-hp-bar-fill boss-hp-fill" id="bossHPBar" style="width:${bossHPPct}%"></div></div>
+            <div class="battle-hp-text boss-hp-text" id="bossHPText">${b.currentHP} / ${b.maxHP} HP</div>
+          </div>
+        </div>
+      </div>
+      <div class="battle-log-box">
+        <div class="battle-log-text" id="battleLogText">${b.defeated ? '🏆 BOSS DEFEATED! You claimed +'+boss.reward+' XP!' : boss.flavor}</div>
+      </div>
+      <div class="battle-controls">
+        <button class="btn btn-danger btn-sm" id="battleAttackBtn" onclick="playerAttack()" ${b.defeated?'disabled':''}>⚔️ Attack! (uses XP power)</button>
+        <button class="btn btn-warning btn-sm" onclick="triggerSpecialAttack()" ${b.defeated?'disabled':''}>💥 Special</button>
+        <button class="btn btn-ghost btn-sm" id="autoFightBtn" onclick="toggleAutoFight()">🤖 Auto-Fight</button>
+        <div class="battle-xp-display" id="battleXPDisplay">
+          ${state.totalXP.toLocaleString()} XP
+          <span>Your Power Level</span>
+        </div>
+      </div>
+      <div class="battle-info-row">
+        <div class="battle-stat-pill" style="color:#ffd93d">⚡ ${state.totalXP.toLocaleString()} Total XP</div>
+        <div class="battle-stat-pill" style="color:#ff6b6b">💀 ${state.bossesDefeated||0} Bosses Slain</div>
+        <div class="battle-stat-pill" style="color:var(--accent)">🏆 +${boss.reward} XP Reward</div>
+        <div class="battle-stat-pill" style="color:#a29bfe">LV ${calcLevel(state.totalXP)} ${LEVEL_TITLES[Math.min(calcLevel(state.totalXP)-1,8)]}</div>
+      </div>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-top:16px">
+      <div class="section-title" style="margin-bottom:12px">⚔️ Your <span>Weapons</span> — complete tasks to power up!</div>
+      <div class="task-list" id="bossTaskList"></div>
+    </div>`;
+
+  renderTaskList('bossTaskList', false);
+  initBattleCanvas(b, boss, heroHP, heroHPMax);
+}
+
+function initBattleCanvas(b, boss, heroHP, heroHPMax) {
+  battleCanvas = document.getElementById('battleCanvas');
+  if (!battleCanvas) return;
+  battleCtx = battleCanvas.getContext('2d');
+
+  const W = 800, H = 320;
+  const groundY = H - 70;
+
+  const clsData = HERO_CLASSES_SPRITES[state.selectedClass] || HERO_CLASSES_SPRITES.default;
+  const bossSprite = BOSS_SPRITES[b.bossIdx % BOSS_SPRITES.length];
+  const xpPower = Math.min(state.totalXP, 9999);
+
+  battleAnim = {
+    running: true,
+    time: 0,
+    W, H, groundY,
+    heroX: 130, heroY: groundY,
+    heroHP, heroMaxHP: heroHPMax,
+    heroAttacking: false, heroAttackTimer: 0,
+    heroHurt: false, heroHurtTimer: 0,
+    heroDead: false,
+    bossX: W - 160, bossY: groundY,
+    bossHP: b.currentHP, bossMaxHP: b.maxHP,
+    bossAttacking: false, bossAttackTimer: 0,
+    bossHurt: false, bossHurtTimer: 0,
+    bossDead: b.defeated,
+    bossDeathTimer: b.defeated ? 999 : 0,
+    projectiles: [],
+    particles: [],
+    floatingTexts: [],
+    phase: b.defeated ? 'victory' : 'fighting',
+    xpPower,
+    battleLog: b.defeated ? '🏆 BOSS DEFEATED!' : boss.flavor,
+    autoFightInterval: null,
+    shake: 0,
+    clsData, bossSprite,
+    bossIdx: b.bossIdx,
+    bossName: boss.name,
+  };
+
+  if (battleRAF) cancelAnimationFrame(battleRAF);
+  battleLoop();
+}
+
+function battleLoop() {
+  if (!battleAnim.running || !battleCtx) return;
+  updateBattle();
+  drawBattle();
+  battleRAF = requestAnimationFrame(battleLoop);
+}
+
+function updateBattle() {
+  const a = battleAnim;
+  a.time += 0.016;
+
+  // Timers
+  if (a.heroAttackTimer > 0) { a.heroAttackTimer -= 0.016; if (a.heroAttackTimer <= 0) a.heroAttacking = false; }
+  if (a.heroHurtTimer > 0) { a.heroHurtTimer -= 0.016; if (a.heroHurtTimer <= 0) a.heroHurt = false; }
+  if (a.bossAttackTimer > 0) { a.bossAttackTimer -= 0.016; if (a.bossAttackTimer <= 0) a.bossAttacking = false; }
+  if (a.bossHurtTimer > 0) { a.bossHurtTimer -= 0.016; if (a.bossHurtTimer <= 0) a.bossHurt = false; }
+  if (a.shake > 0) a.shake -= 2;
+  if (a.bossDeathTimer > 0 && a.bossDead) a.bossDeathTimer += 0.016;
+
+  // Move projectiles
+  a.projectiles = a.projectiles.filter(p => {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.2; // gravity
+    p.life -= 0.016;
+    // Hit detection
+    if (!a.bossHurt && !a.bossDead && p.type === 'hero' && Math.abs(p.x - a.bossX) < 50) {
+      a.bossHurt = true; a.bossHurtTimer = 0.4;
+      a.shake = 10;
+      spawnParticles(a.bossX, a.bossY - 60, '#ff6b6b', 8);
+      return false;
+    }
+    if (!a.heroHurt && p.type === 'boss' && Math.abs(p.x - a.heroX) < 40) {
+      a.heroHurt = true; a.heroHurtTimer = 0.4;
+      spawnParticles(a.heroX, a.heroY - 50, '#00f5a0', 6);
+      return false;
+    }
+    return p.life > 0 && p.x > 0 && p.x < a.W;
+  });
+
+  // Particles
+  a.particles = a.particles.filter(p => {
+    p.x += p.vx; p.y += p.vy; p.vy += 0.15;
+    p.life -= 0.025; p.alpha = Math.max(0, p.life);
+    return p.life > 0;
+  });
+
+  // Floating texts
+  a.floatingTexts = a.floatingTexts.filter(t => {
+    t.y -= 1.2; t.life -= 0.02; t.alpha = Math.max(0, t.life);
+    return t.life > 0;
+  });
+
+  // Boss passive attack rhythm
+  if (a.phase === 'fighting' && !a.bossDead && !a.bossAttacking && Math.sin(a.time * 0.8) > 0.97) {
+    a.bossAttacking = true; a.bossAttackTimer = 0.5;
+    fireBossProjectile();
+  }
+}
+
+function spawnParticles(x, y, color, count) {
+  for (let i = 0; i < count; i++) {
+    battleAnim.particles.push({
+      x, y,
+      vx: (Math.random() - 0.5) * 6,
+      vy: -(Math.random() * 4 + 1),
+      color,
+      size: Math.random() * 5 + 2,
+      life: 1, alpha: 1,
+    });
+  }
+}
+
+function fireHeroProjectile() {
+  const a = battleAnim;
+  const dmg = Math.max(5, Math.round(state.totalXP / 10));
+  // XP orbs fly toward boss
+  for (let i = 0; i < 3; i++) {
+    battleAnim.projectiles.push({
+      x: a.heroX + 30, y: a.heroY - 50 + (i - 1) * 12,
+      vx: 12 + i * 2, vy: -2 + i * 1.5,
+      type: 'hero',
+      color: ['#00f5a0','#ffd93d','#00d4ff'][i],
+      size: 6 + i * 2,
+      life: 2,
+    });
+  }
+  battleAnim.floatingTexts.push({ x: a.heroX + 40, y: a.heroY - 80, text: `-${dmg} ⚡`, color: '#ffd93d', life: 1, alpha: 1, size: 14 });
+}
+
+function fireBossProjectile() {
+  const a = battleAnim;
+  const bossSprite = BOSS_SPRITES[a.bossIdx % BOSS_SPRITES.length];
+  battleAnim.projectiles.push({
+    x: a.bossX - 30, y: a.bossY - 60,
+    vx: -10, vy: -1,
+    type: 'boss',
+    color: bossSprite.eyeColor,
+    size: 10,
+    life: 2,
+  });
+}
+
+function drawBattle() {
+  const a = battleAnim;
+  const ctx = battleCtx;
+  const W = a.W, H = a.H;
+
+  // Shake offset
+  const sx = a.shake > 0 ? (Math.random() - 0.5) * a.shake : 0;
+  const sy = a.shake > 0 ? (Math.random() - 0.5) * a.shake * 0.5 : 0;
+
+  ctx.save();
+  ctx.translate(sx, sy);
+
+  // ---- BACKGROUND ----
+  const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
+  bgGrad.addColorStop(0, '#050010');
+  bgGrad.addColorStop(0.5, '#150035');
+  bgGrad.addColorStop(1, '#0d1117');
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Stars
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  const starSeed = 42;
+  for (let i = 0; i < 60; i++) {
+    const sx2 = ((starSeed * (i * 7919 + 1)) % W);
+    const sy2 = ((starSeed * (i * 6271 + 3)) % (H * 0.6));
+    const flicker = 0.5 + 0.5 * Math.sin(a.time * 2 + i);
+    ctx.globalAlpha = flicker * 0.8;
+    ctx.fillRect(sx2, sy2, i % 3 === 0 ? 2 : 1, i % 3 === 0 ? 2 : 1);
+  }
+  ctx.globalAlpha = 1;
+
+  // Moon
+  ctx.beginPath();
+  ctx.arc(W * 0.8, 50, 30, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255,240,180,0.15)';
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(W * 0.8, 50, 28, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(255,240,180,0.3)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Ground
+  const gGrad = ctx.createLinearGradient(0, a.groundY, 0, H);
+  gGrad.addColorStop(0, '#1a0a2e');
+  gGrad.addColorStop(1, '#0a0520');
+  ctx.fillStyle = gGrad;
+  ctx.fillRect(0, a.groundY, W, H - a.groundY);
+
+  // Ground glow line
+  ctx.beginPath();
+  ctx.moveTo(0, a.groundY);
+  ctx.lineTo(W, a.groundY);
+  ctx.strokeStyle = 'rgba(0,245,160,0.3)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // XP power aura on ground under hero
+  const auraPulse = 0.6 + 0.4 * Math.sin(a.time * 3);
+  const auraR = Math.min(80 + state.totalXP * 0.02, 150);
+  const auraGrad = ctx.createRadialGradient(a.heroX, a.groundY, 0, a.heroX, a.groundY, auraR);
+  auraGrad.addColorStop(0, `rgba(0,245,160,${0.3 * auraPulse})`);
+  auraGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = auraGrad;
+  ctx.fillRect(a.heroX - auraR, a.groundY - auraR/2, auraR*2, auraR);
+
+  // ---- HERO ----
+  drawHero(ctx, a);
+
+  // ---- BOSS ----
+  if (!a.bossDead || a.bossDeathTimer < 1.5) {
+    drawBossCharacter(ctx, a);
+  }
+
+  // ---- VICTORY DISPLAY ----
+  if (a.bossDead && a.bossDeathTimer > 1.5) {
+    drawVictoryScene(ctx, a);
+  }
+
+  // ---- PROJECTILES ----
+  a.projectiles.forEach(p => {
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, p.life * 2);
+    // Glow
+    ctx.shadowColor = p.color;
+    ctx.shadowBlur = 15;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fillStyle = p.color;
+    ctx.fill();
+    // Inner bright
+    ctx.shadowBlur = 0;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size * 0.4, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+    ctx.restore();
+  });
+
+  // ---- PARTICLES ----
+  a.particles.forEach(p => {
+    ctx.save();
+    ctx.globalAlpha = p.alpha;
+    ctx.shadowColor = p.color;
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fillStyle = p.color;
+    ctx.fill();
+    ctx.restore();
+  });
+
+  // ---- FLOATING TEXTS ----
+  a.floatingTexts.forEach(t => {
+    ctx.save();
+    ctx.globalAlpha = t.alpha;
+    ctx.font = `bold ${t.size || 16}px 'Orbitron', monospace`;
+    ctx.fillStyle = t.color;
+    ctx.shadowColor = t.color;
+    ctx.shadowBlur = 10;
+    ctx.textAlign = 'center';
+    ctx.fillText(t.text, t.x, t.y);
+    ctx.restore();
+  });
+
+  // XP Power level indicator (bottom left of canvas)
+  ctx.save();
+  ctx.font = "bold 11px 'Orbitron', monospace";
+  ctx.fillStyle = 'rgba(255,217,61,0.7)';
+  ctx.textAlign = 'left';
+  ctx.fillText(`⚡ POWER: ${state.totalXP.toLocaleString()} XP`, 14, H - 14);
+  ctx.restore();
+
+  ctx.restore(); // end shake
+}
+
+function drawHero(ctx, a) {
+  const x = a.heroX, y = a.heroY;
+  const cls = a.clsData;
+  const bob = Math.sin(a.time * 3) * 3;
+  const hurtTint = a.heroHurt ? 0.8 : 0;
+  const atkOffset = a.heroAttacking ? 20 : 0;
+
+  ctx.save();
+  ctx.translate(x + atkOffset, y + bob);
+
+  // Shadow
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 22, 7, 0, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.fill();
+
+  // Body glow (XP power)
+  const glowR = 20 + Math.min(state.totalXP * 0.03, 40);
+  const bodyGlow = ctx.createRadialGradient(0, -50, 0, 0, -50, glowR);
+  bodyGlow.addColorStop(0, cls.body + '60');
+  bodyGlow.addColorStop(1, 'transparent');
+  ctx.fillStyle = bodyGlow;
+  ctx.fillRect(-glowR, -100, glowR * 2, 100);
+
+  // Legs
+  ctx.fillStyle = a.heroHurt ? '#ff6b6b' : '#2c3e50';
+  // Left leg
+  const legSwing = Math.sin(a.time * 6) * (a.heroAttacking ? 8 : 3);
+  ctx.fillRect(-12, -26, 10, 26 + legSwing);
+  ctx.fillRect(-12, -26 - legSwing, 10, 26);
+  // Right leg
+  ctx.fillRect(2, -26, 10, 26 - legSwing);
+
+  // Feet
+  ctx.fillStyle = '#1a252f';
+  ctx.fillRect(-14, -4, 12, 6);
+  ctx.fillRect(0, -4, 12, 6);
+
+  // Body / tunic
+  ctx.fillStyle = a.heroHurt ? '#ff6b6b' : cls.body;
+  if (hurtTint > 0) {
+    ctx.globalAlpha = 0.7;
+    ctx.fillStyle = '#ff6b6b';
+  }
+  ctx.fillRect(-14, -62, 28, 36);
+  ctx.globalAlpha = 1;
+
+  // Arms
+  ctx.fillStyle = a.heroHurt ? '#ff6b6b' : cls.body;
+  const armSwing = Math.sin(a.time * 3) * 5;
+  // Left arm
+  ctx.fillRect(-22, -58, 8, 22 + armSwing);
+  // Right arm (weapon arm)
+  const wArmRot = a.heroAttacking ? -40 : armSwing;
+  ctx.save();
+  ctx.translate(14, -54);
+  ctx.rotate(wArmRot * Math.PI / 180);
+  ctx.fillRect(0, 0, 8, 24);
+  ctx.restore();
+
+  // Head
+  ctx.fillStyle = '#f4d03f';
+  ctx.beginPath();
+  ctx.arc(0, -72, 16, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Hair
+  ctx.fillStyle = cls.hair;
+  ctx.beginPath();
+  ctx.arc(0, -80, 13, Math.PI, 0);
+  ctx.fill();
+  ctx.fillRect(-13, -80, 5, 12); // left spike
+  ctx.fillRect(8, -80, 5, 14);   // right spike
+
+  // Eyes
+  ctx.fillStyle = a.heroHurt ? '#ff6b6b' : '#1a1a2e';
+  ctx.beginPath(); ctx.arc(-6, -72, 3, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(6, -72, 3, 0, Math.PI * 2); ctx.fill();
+  // Pupils
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(-5, -73, 1.2, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(7, -73, 1.2, 0, Math.PI * 2); ctx.fill();
+
+  // Level badge
+  ctx.font = "bold 9px 'Orbitron',monospace";
+  ctx.fillStyle = '#ffd93d';
+  ctx.textAlign = 'center';
+  ctx.shadowColor = '#ffd93d';
+  ctx.shadowBlur = 6;
+  ctx.fillText(`LV${calcLevel(state.totalXP)}`, 0, -94);
+  ctx.shadowBlur = 0;
+
+  // Weapon emoji (near right hand)
+  ctx.font = '18px serif';
+  ctx.textAlign = 'center';
+  const wx = a.heroAttacking ? 38 : 26;
+  const wy = a.heroAttacking ? -60 : -50;
+  ctx.fillText(cls.weapon, wx, wy);
+
+  // Attack flash
+  if (a.heroAttacking) {
+    ctx.beginPath();
+    ctx.arc(45, -55, 18, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,217,61,0.5)';
+    ctx.fill();
+    ctx.font = "bold 14px 'Orbitron',monospace";
+    ctx.fillStyle = '#ffd93d';
+    ctx.fillText('HIT!', 45, -50);
+  }
+
+  ctx.restore();
+}
+
+function drawBossCharacter(ctx, a) {
+  const x = a.bossX, y = a.bossY;
+  const sp = a.bossSprite;
+  const scale = sp.size;
+  const bob = Math.sin(a.time * 2.5 + 1) * 4;
+  const atkOffset = a.bossAttacking ? -25 : 0;
+  const hurtFlash = a.bossHurt ? 'rgba(255,100,100,0.6)' : null;
+  const deathAlpha = a.bossDead ? Math.max(0, 1 - a.bossDeathTimer * 0.7) : 1;
+
+  ctx.save();
+  ctx.globalAlpha = deathAlpha;
+  ctx.translate(x + atkOffset, y + bob);
+  ctx.scale(-1, 1); // flip to face left
+  ctx.scale(scale, scale);
+
+  const bw = 34, bh = 60;
+
+  // Shadow
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 28 * scale, 8, 0, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.fill();
+
+  // Boss aura
+  const bAura = ctx.createRadialGradient(0, -40, 0, 0, -40, 60);
+  bAura.addColorStop(0, sp.color + '40');
+  bAura.addColorStop(1, 'transparent');
+  ctx.fillStyle = bAura;
+  ctx.fillRect(-60, -100, 120, 100);
+
+  // Legs
+  ctx.fillStyle = hurtFlash || sp.color;
+  if (hurtFlash) ctx.fillStyle = '#ff6b6b';
+  const bLegSwing = Math.sin(a.time * 2) * 4;
+  ctx.fillRect(-16, -bh/2, 14, bh/2 + bLegSwing);
+  ctx.fillRect(2, -bh/2, 14, bh/2);
+  // Claws feet
+  ctx.fillStyle = '#1a1a1a';
+  ctx.fillRect(-20, -6, 10, 8); ctx.fillRect(2, -6, 10, 8);
+
+  // Body
+  ctx.fillStyle = hurtFlash ? '#ff6b6b' : sp.color;
+  ctx.fillRect(-bw/2, -bh, bw, bh/2);
+
+  // Arms (with claws)
+  ctx.fillStyle = hurtFlash ? '#ff6b6b' : sp.color;
+  const bArmSwing = Math.sin(a.time * 2.5) * 6;
+  ctx.fillRect(-bw/2 - 14, -bh + 4, 14, 24 + bArmSwing);
+  ctx.fillRect(bw/2, -bh + 4, 14, 24 - bArmSwing);
+  // Claw tips
+  ctx.fillStyle = '#333';
+  ctx.fillRect(-bw/2 - 18, -bh + 26, 8, 6);
+  ctx.fillRect(bw/2 + 10, -bh + 24, 8, 6);
+
+  // Head
+  ctx.fillStyle = hurtFlash ? '#ff8888' : sp.color;
+  ctx.beginPath();
+  ctx.arc(0, -bh - 16, 22, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Horns
+  if (sp.horns) {
+    ctx.fillStyle = '#8B0000';
+    ctx.beginPath();
+    ctx.moveTo(-18, -bh - 30); ctx.lineTo(-12, -bh - 55); ctx.lineTo(-4, -bh - 30); ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(4, -bh - 30); ctx.lineTo(12, -bh - 55); ctx.lineTo(18, -bh - 30); ctx.closePath(); ctx.fill();
+  }
+
+  // Wings
+  if (sp.wings) {
+    const wingFlap = Math.sin(a.time * 4) * 15;
+    ctx.fillStyle = sp.color + 'aa';
+    ctx.beginPath();
+    ctx.moveTo(-bw/2, -bh);
+    ctx.lineTo(-bw/2 - 50, -bh - 20 - wingFlap);
+    ctx.lineTo(-bw/2 - 30, -bh + 20);
+    ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(bw/2, -bh);
+    ctx.lineTo(bw/2 + 50, -bh - 20 - wingFlap);
+    ctx.lineTo(bw/2 + 30, -bh + 20);
+    ctx.closePath(); ctx.fill();
+  }
+
+  // Tail
+  if (sp.tail) {
+    ctx.beginPath();
+    ctx.moveTo(bw/2, -bh/2);
+    ctx.bezierCurveTo(bw/2 + 30, -bh/2 + 20 + bArmSwing, bw/2 + 50, -bh/4, bw/2 + 40, 0);
+    ctx.strokeStyle = sp.color;
+    ctx.lineWidth = 6;
+    ctx.stroke();
+    // Tail spike
+    ctx.beginPath();
+    ctx.arc(bw/2 + 40, 0, 6, 0, Math.PI * 2);
+    ctx.fillStyle = '#8B0000';
+    ctx.fill();
+  }
+
+  // Eyes
+  ctx.fillStyle = sp.eyeColor;
+  ctx.shadowColor = sp.eyeColor;
+  ctx.shadowBlur = 12;
+  ctx.beginPath(); ctx.arc(-9, -bh - 18, 5, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(9, -bh - 18, 5, 0, Math.PI * 2); ctx.fill();
+  ctx.shadowBlur = 0;
+  // Pupils
+  ctx.fillStyle = '#000';
+  ctx.beginPath(); ctx.arc(-9, -bh - 18, 2, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(9, -bh - 18, 2, 0, Math.PI * 2); ctx.fill();
+
+  // Mouth (angry)
+  ctx.beginPath();
+  ctx.moveTo(-10, -bh - 8);
+  ctx.lineTo(-5, -bh - 4);
+  ctx.lineTo(0, -bh - 8);
+  ctx.lineTo(5, -bh - 4);
+  ctx.lineTo(10, -bh - 8);
+  ctx.strokeStyle = '#ff4444';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  // Fangs
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(-8, -bh - 8, 4, 5);
+  ctx.fillRect(4, -bh - 8, 4, 5);
+
+  // Attack effect
+  if (a.bossAttacking) {
+    ctx.font = "bold 16px 'Orbitron',monospace";
+    ctx.fillStyle = '#ff4444';
+    ctx.shadowColor = '#ff4444';
+    ctx.shadowBlur = 15;
+    ctx.textAlign = 'center';
+    ctx.fillText('STRIKE!', -10, -bh - 70);
+    ctx.shadowBlur = 0;
+  }
+
+  // HP death dissolve
+  if (a.bossDead) {
+    for (let i = 0; i < 5; i++) {
+      ctx.beginPath();
+      ctx.arc((Math.random()-0.5)*60, -60 + Math.random()*60, Math.random()*8+2, 0, Math.PI*2);
+      ctx.fillStyle = sp.color;
+      ctx.globalAlpha = Math.random() * deathAlpha * 0.5;
+      ctx.fill();
+    }
+  }
+
+  ctx.restore();
+}
+
+function drawVictoryScene(ctx, a) {
+  const W = a.W, H = a.H;
+
+  // Victory glow
+  const t = a.bossDeathTimer - 1.5;
+  const alpha = Math.min(1, t * 0.5);
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+
+  // Gold rays
+  ctx.save();
+  ctx.translate(W/2, H/2);
+  for (let i = 0; i < 12; i++) {
+    ctx.save();
+    ctx.rotate((i / 12) * Math.PI * 2 + a.time * 0.5);
+    const rGrad = ctx.createLinearGradient(0, 0, 0, -200);
+    rGrad.addColorStop(0, 'rgba(255,217,61,0.4)');
+    rGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = rGrad;
+    ctx.beginPath();
+    ctx.moveTo(-8, 0);
+    ctx.lineTo(8, 0);
+    ctx.lineTo(3, -180);
+    ctx.lineTo(-3, -180);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+  ctx.restore();
+
+  // Victory text
+  ctx.font = "bold 48px 'Orbitron',monospace";
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#ffd93d';
+  ctx.shadowColor = '#ffd93d';
+  ctx.shadowBlur = 30;
+  ctx.fillText('VICTORY!', W/2, H/2 - 20);
+  ctx.shadowBlur = 0;
+
+  ctx.font = "bold 20px 'Orbitron',monospace";
+  ctx.fillStyle = '#00f5a0';
+  ctx.fillText(`BOSS DEFEATED`, W/2, H/2 + 20);
+
+  ctx.font = "bold 16px 'Orbitron',monospace";
+  ctx.fillStyle = '#ffd93d';
+  const boss = BOSSES[a.bossIdx % BOSSES.length];
+  ctx.fillText(`+${boss.reward} XP CLAIMED!`, W/2, H/2 + 50);
+
+  ctx.restore();
+}
+
+/* ---- Battle actions called from buttons ---- */
+function playerAttack() {
+  if (!state.currentBoss || state.currentBoss.defeated) return;
+  if (battleAnim.heroAttacking) return;
+
+  const dmg = Math.max(5, Math.round(state.totalXP / 10));
+  battleAnim.heroAttacking = true;
+  battleAnim.heroAttackTimer = 0.5;
+  fireHeroProjectile();
+
+  // Apply damage after short delay
+  setTimeout(() => {
+    if (!state.currentBoss || state.currentBoss.defeated) return;
+    state.currentBoss.currentHP = Math.max(0, state.currentBoss.currentHP - dmg);
+    battleAnim.bossHurt = true;
+    battleAnim.bossHurtTimer = 0.4;
+    battleAnim.shake = 12;
+    spawnParticles(battleAnim.bossX, battleAnim.bossY - 60, '#ff6b6b', 12);
+    battleAnim.floatingTexts.push({
+      x: battleAnim.bossX, y: battleAnim.bossY - 90,
+      text: `-${dmg} 💥`, color: '#ff6b6b', life: 1.2, alpha: 1, size: 16
+    });
+    updateBossHUD();
+    const logEl = document.getElementById('battleLogText');
+    if (logEl) logEl.textContent = `⚔️ You dealt ${dmg} damage using ${state.totalXP} XP power!`;
+
+    if (state.currentBoss.currentHP <= 0) {
+      defeatBoss();
+      battleAnim.bossDead = true;
+      battleAnim.bossDeathTimer = 0.01;
+    }
+    saveState();
+  }, 300);
+}
+
+function triggerSpecialAttack() {
+  if (!state.currentBoss || state.currentBoss.defeated) return;
+  const level = calcLevel(state.totalXP);
+  const dmg = Math.round(level * 15 + state.totalXP * 0.05);
+
+  // Big explosion
+  for (let i = 0; i < 5; i++) {
+    setTimeout(() => {
+      fireHeroProjectile();
+      spawnParticles(battleAnim.bossX + (Math.random()-0.5)*60, battleAnim.bossY - 40 - Math.random()*60, ['#ffd93d','#ff6b6b','#00f5a0','#a29bfe'][Math.floor(Math.random()*4)], 10);
+    }, i * 80);
+  }
+  battleAnim.heroAttacking = true;
+  battleAnim.heroAttackTimer = 0.8;
+  battleAnim.floatingTexts.push({
+    x: battleAnim.W/2, y: 80,
+    text: `SPECIAL ATTACK! -${dmg}`, color: '#ffd93d', life: 1.5, alpha: 1, size: 20
+  });
+
+  setTimeout(() => {
+    if (!state.currentBoss || state.currentBoss.defeated) return;
+    state.currentBoss.currentHP = Math.max(0, state.currentBoss.currentHP - dmg);
+    battleAnim.shake = 20;
+    updateBossHUD();
+    const logEl = document.getElementById('battleLogText');
+    if (logEl) logEl.textContent = `💥 SPECIAL ATTACK! Dealt ${dmg} massive damage!`;
+    if (state.currentBoss.currentHP <= 0) {
+      defeatBoss();
+      battleAnim.bossDead = true;
+      battleAnim.bossDeathTimer = 0.01;
+    }
+    saveState();
+  }, 400);
+}
+
+let autoFightActive = false;
+let autoFightTimer = null;
+function toggleAutoFight() {
+  autoFightActive = !autoFightActive;
+  const btn = document.getElementById('autoFightBtn');
+  if (autoFightActive) {
+    if (btn) { btn.textContent = '⏹ Stop Auto'; btn.style.color = '#ff6b6b'; }
+    autoFightTimer = setInterval(() => {
+      if (!state.currentBoss || state.currentBoss.defeated) {
+        clearInterval(autoFightTimer); autoFightActive = false;
+        if (btn) btn.textContent = '🤖 Auto-Fight';
+        return;
+      }
+      playerAttack();
+    }, 1200);
+  } else {
+    clearInterval(autoFightTimer);
+    if (btn) { btn.textContent = '🤖 Auto-Fight'; btn.style.color = ''; }
+  }
+}
+
+function updateBossHUD() {
+  if (!state.currentBoss) return;
+  const b = state.currentBoss;
+  const boss = BOSSES[b.bossIdx];
+  const hpPct = Math.round((b.currentHP / b.maxHP) * 100);
+  const hpBar = document.getElementById('bossHPBar');
+  const hpTxt = document.getElementById('bossHPText');
+  if (hpBar) hpBar.style.width = hpPct + '%';
+  if (hpTxt) hpTxt.textContent = b.currentHP + ' / ' + b.maxHP + ' HP';
+}
+
+function stopBattleAnimation() {
+  if (battleRAF) { cancelAnimationFrame(battleRAF); battleRAF = null; }
+  if (autoFightTimer) { clearInterval(autoFightTimer); autoFightTimer = null; }
+  autoFightActive = false;
+  if (battleAnim) battleAnim.running = false;
+}
+
+function renderAchievements(){
+  const grid=document.getElementById('achievementsGrid');if(!grid)return;
+  const unlocked=ACHIEVEMENT_DEFS.filter(a=>state.achievements[a.id]).length;
+  const ac=document.getElementById('achievementCount');if(ac)ac.textContent=`${unlocked} / ${ACHIEVEMENT_DEFS.length} Unlocked`;
+  grid.innerHTML=ACHIEVEMENT_DEFS.map(a=>{
+    const done=!!state.achievements[a.id];
+    return`<div class="achievement-card ${done?'unlocked':'locked'}">
+      <div class="achievement-emoji">${a.emoji}</div>
+      <div class="achievement-name">${a.name}</div>
+      <div class="achievement-desc">${a.desc}</div>
+      <div class="achievement-badge">${done?'✓ UNLOCKED':'LOCKED'}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderStats(){
+  document.getElementById('statsTotal').textContent=state.totalXP.toLocaleString();
+  document.getElementById('statsDays').textContent=state.daysActive;
+  document.getElementById('statsMaxStreak').textContent=state.maxStreak;
+  document.getElementById('statsTotalCompleted').textContent=state.totalCompleted;
+  // Personal Records
+  const prg=document.getElementById('prGrid');if(!prg)return;
+  const fastStr=state.bestFastestAllComplete?formatMs(state.bestFastestAllComplete):'--';
+  const isBeatBestDay=state.todayXP>0&&state.todayXP>=state.bestDayXP&&state.bestDayXP>0;
+  prg.innerHTML=`
+    <div class="pr-card ${isBeatBestDay?'beating':''}"><div class="pr-value">${state.bestDayXP}</div><div class="pr-label">Best Day XP</div>${isBeatBestDay?'<div class="pr-beating-label">🔴 ON TRACK TO BEAT!</div>':''}</div>
+    <div class="pr-card"><div class="pr-value">${state.maxStreak}</div><div class="pr-label">Best Streak</div></div>
+    <div class="pr-card"><div class="pr-value">${state.maxCombo||1}x</div><div class="pr-label">Best Combo</div></div>
+    <div class="pr-card"><div class="pr-value">${fastStr}</div><div class="pr-label">Fastest All-Done</div></div>
+    <div class="pr-card"><div class="pr-value">${state.bossesDefeated||0}</div><div class="pr-label">Bosses Slain</div></div>
+    <div class="pr-card"><div class="pr-value">${state.lootBoxesOpened||0}</div><div class="pr-label">Loot Opened</div></div>
+  `;
+  // Weekly chart
+  const chart=document.getElementById('weeklyChart');
+  const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];const today=new Date().getDay();
+  const allXP=[...state.weeklyXP.slice(-6),state.todayXP];const maxXP=Math.max(...allXP,1);
+  chart.innerHTML=allXP.map((xp,i)=>{
+    const isToday=i===6;const height=Math.max(4,(xp/maxXP)*100);
+    const di=(today-6+i+7)%7;const label=isToday?'Today':days[di===0?6:di-1];
+    return`<div class="chart-bar-wrap"><div class="chart-bar ${isToday?'today':''}" style="height:${height}%" data-xp="${xp}"></div><div class="chart-day">${label}</div></div>`;
+  }).join('');
+}
+
+function renderSkills(){
+  const grid=document.getElementById('classGrid');if(!grid)return;
+  const lbl=document.getElementById('currentClassLabel');
+  const cls=CLASSES.find(c=>c.id===state.selectedClass);
+  if(lbl)lbl.textContent=cls?('Current: '+cls.emoji+' '+cls.name):'No class selected';
+  grid.innerHTML=CLASSES.map(c=>`
+    <div class="class-card ${state.selectedClass===c.id?'selected':''}" onclick="selectClass('${c.id}')">
+      <div class="class-emoji">${c.emoji}</div>
+      <div class="class-name">${c.name}</div>
+      <div class="class-desc">${c.desc}</div>
+      <div class="class-bonus">${c.bonus}</div>
+    </div>`).join('');
+}
+function selectClass(id){
+  state.selectedClass=id;saveState();checkAchievements();renderSkills();renderAll();
+  playSound('complete');
+}
+
+function renderSettings(){
+  document.getElementById('penaltyToggle').checked=state.settings.penalty;
+  document.getElementById('streakBonusToggle').checked=state.settings.streakBonus;
+  document.getElementById('confettiToggle').checked=state.settings.confetti;
+  document.getElementById('soundToggle').checked=state.settings.sound;
+  document.getElementById('challengeToggle').checked=state.settings.challenge;
+  document.getElementById('bossToggle').checked=state.settings.boss!==false;
+  document.getElementById('comboToggle').checked=state.settings.combo!==false;
+  document.getElementById('powerHourToggle').checked=state.settings.powerHour!==false;
+  document.getElementById('streakBonusXP').value=state.settings.streakBonusXP;
+  document.getElementById('pomoFocusMin').value=state.settings.pomoFocus||25;
+  document.getElementById('pomoBreakMin').value=state.settings.pomoBreak||5;
+  const list=document.getElementById('manageTasksList');
+  list.innerHTML=state.tasks.map(t=>`<div class="manage-task-row">
+    <span class="manage-task-name">${escHtml(t.name)}</span>
+    <input class="manage-task-xp" type="number" value="${t.xp}" min="1" max="500" onchange="updateTaskXP(${t.id},parseInt(this.value)||10)">
+    <button class="btn btn-ghost btn-sm" onclick="openEditModal(${t.id})">✏️</button>
+    <button class="task-btn delete" onclick="deleteTask(${t.id})">🗑️</button>
+  </div>`).join('');
+  document.querySelectorAll('.color-swatch').forEach(s=>s.classList.toggle('active',s.dataset.accent===state.settings.accent));
+}
+
+/* ==================================================
+   SETTINGS FUNCTIONS
+================================================== */
+function saveSetting(k,v){
+  state.settings[k]=v;saveState();
+  if(k==='sound')document.getElementById('soundBtn').textContent=v?'🔊':'🔇';
+  if(k==='challenge'){if(v&&!state.dailyChallenge)generateDailyChallenge();renderDashboard()}
+}
+function toggleTheme(){
+  const html=document.documentElement;const isDark=html.getAttribute('data-theme')==='dark';
+  html.setAttribute('data-theme',isDark?'light':'dark');
+  document.getElementById('themeBtn').textContent=isDark?'☀️':'🌙';
+  state.settings.theme=isDark?'light':'dark';saveState();
+}
+function toggleSound(){
+  state.settings.sound=!state.settings.sound;
+  document.getElementById('soundBtn').textContent=state.settings.sound?'🔊':'🔇';
+  if(document.getElementById('soundToggle'))document.getElementById('soundToggle').checked=state.settings.sound;
+  saveState();
+}
+function setAccentColor(el){
+  document.documentElement.style.setProperty('--accent',el.dataset.accent);
+  document.documentElement.style.setProperty('--accent2',el.dataset.accent2);
+  state.settings.accent=el.dataset.accent;state.settings.accent2=el.dataset.accent2;saveState();
+  document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('active'));el.classList.add('active');
+}
+function applyAccentColor(){
+  if(state.settings.accent)document.documentElement.style.setProperty('--accent',state.settings.accent);
+  if(state.settings.accent2)document.documentElement.style.setProperty('--accent2',state.settings.accent2);
+  if(state.settings.theme){document.documentElement.setAttribute('data-theme',state.settings.theme);document.getElementById('themeBtn').textContent=state.settings.theme==='dark'?'🌙':'☀️'}
+  document.getElementById('soundBtn').textContent=state.settings.sound?'🔊':'🔇';
+}
+function updateTaskXP(id,xp){const t=state.tasks.find(x=>x.id===id);if(t){t.xp=xp;saveState();renderAll()}}
+
+/* ==================================================
+   UI HELPERS
+================================================== */
+function switchTab(tab){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  // Stop battle animation when leaving boss tab
+  if(tab!=='boss')stopBattleAnimation();
+  document.getElementById(`panel-${tab}`).classList.add('active');
+  const tabs=document.querySelectorAll('.nav-tab');
+  const idx=['dashboard','tasks','boss','skills','achievements','stats','settings'].indexOf(tab);
+  if(tabs[idx])tabs[idx].classList.add('active');
+  if(tab==='stats')renderStats();
+  if(tab==='settings')renderSettings();
+  if(tab==='achievements')renderAchievements();
+  if(tab==='boss')renderBoss();
+  if(tab==='skills')renderSkills();
+}
+function toggleAddForm(show){
+  const form=document.getElementById('addTaskForm');
+  if(show===undefined)form.classList.toggle('visible');
+  else form.classList.toggle('visible',show);
+  if(form.classList.contains('visible'))document.getElementById('newTaskName').focus();
+}
+
+/* ==================================================
+   POMODORO
+================================================== */
+let pomoState={taskId:null,taskName:'',interval:null,running:false,isBreak:false,secondsLeft:0,totalSeconds:0};
+function startPomo(taskId,taskName){
+  stopPomoGlobal();
+  const sec=(state.settings.pomoFocus||25)*60;
+  pomoState={taskId,taskName,running:false,isBreak:false,secondsLeft:sec,totalSeconds:sec,interval:null};
+  document.getElementById('pomoWidgetTask').textContent=taskName;
+  document.getElementById('pomoWidgetLabel').textContent='FOCUS';
+  document.getElementById('pomoWidgetTime').className='pomo-widget-time';
+  document.getElementById('pomoWidgetBtn').textContent='▶';
+  updatePomoWidget();document.getElementById('pomoWidget').classList.add('show');
+}
+function launchPomoForTask(id){const t=state.tasks.find(x=>x.id===id);if(t)startPomo(id,t.name)}
+function togglePomoFromWidget(){if(!pomoState.running)resumePomo();else pausePomo()}
+function resumePomo(){
+  if(pomoState.interval)return;pomoState.running=true;
+  document.getElementById('pomoWidgetBtn').textContent='⏸';
+  pomoState.interval=setInterval(()=>{
+    pomoState.secondsLeft--;updatePomoWidget();
+    if(pomoState.secondsLeft<=0){
+      clearInterval(pomoState.interval);pomoState.interval=null;
+      if(!pomoState.isBreak){
+        state.totalPomodoros++;saveState();checkAchievements();
+        playSound('levelup');spawnXPPopup(10,'pomoWidget');
+        state.totalXP+=10;state.todayXP+=10;saveState();renderAll();
+        const bSec=(state.settings.pomoBreak||5)*60;
+        pomoState.isBreak=true;pomoState.secondsLeft=bSec;pomoState.totalSeconds=bSec;pomoState.running=false;
+        document.getElementById('pomoWidgetBtn').textContent='▶';
+        document.getElementById('pomoWidgetLabel').textContent='BREAK';
+        document.getElementById('pomoWidgetTime').classList.add('break');
+      }else{
+        pomoState.isBreak=false;const fSec=(state.settings.pomoFocus||25)*60;
+        pomoState.secondsLeft=fSec;pomoState.totalSeconds=fSec;pomoState.running=false;
+        document.getElementById('pomoWidgetBtn').textContent='▶';
+        document.getElementById('pomoWidgetLabel').textContent='FOCUS';
+        document.getElementById('pomoWidgetTime').classList.remove('break');
+      }
+    }
+  },1000);
+}
+function pausePomo(){clearInterval(pomoState.interval);pomoState.interval=null;pomoState.running=false;document.getElementById('pomoWidgetBtn').textContent='▶'}
+function stopPomoGlobal(){clearInterval(pomoState.interval);pomoState.interval=null;pomoState.running=false}
+function closePomoWidget(){stopPomoGlobal();document.getElementById('pomoWidget').classList.remove('show');pomoState.taskId=null}
+function updatePomoWidget(){
+  const m=Math.floor(pomoState.secondsLeft/60).toString().padStart(2,'0');
+  const s=(pomoState.secondsLeft%60).toString().padStart(2,'0');
+  document.getElementById('pomoWidgetTime').textContent=`${m}:${s}`;
+}
+
+/* ==================================================
+   ANIMATIONS
+================================================== */
+function spawnXPPopup(xp,targetId){
+  const el=document.createElement('div');el.className='xp-popup';el.textContent=`+${xp} XP ⚡`;
+  const target=document.getElementById(targetId);
+  let x=window.innerWidth/2,y=window.innerHeight/2;
+  if(target){const r=target.getBoundingClientRect();x=r.left+r.width/2;y=r.top}
+  el.style.left=(x-40)+'px';el.style.top=y+'px';
+  document.body.appendChild(el);setTimeout(()=>el.remove(),1300);
+}
+function showLevelUp(level){
+  document.getElementById('levelupNumber').textContent=level;
+  document.getElementById('levelupTitle').textContent=LEVEL_TITLES[Math.min(level-1,LEVEL_TITLES.length-1)];
+  document.getElementById('levelupOverlay').classList.add('show');
+  if(state.settings.confetti)launchConfetti();playSound('levelup');
+}
+function dismissLevelUp(){document.getElementById('levelupOverlay').classList.remove('show')}
+function launchConfetti(){
+  const colors=['#00f5a0','#00d4ff','#ffd93d','#ff6b6b','#a29bfe','#fd79a8'];
+  for(let i=0;i<80;i++){
+    setTimeout(()=>{
+      const c=document.createElement('div');c.className='confetti-piece';
+      c.style.left=Math.random()*window.innerWidth+'px';c.style.top='-20px';
+      c.style.background=colors[Math.floor(Math.random()*colors.length)];
+      c.style.width=(Math.random()*10+5)+'px';c.style.height=(Math.random()*10+5)+'px';
+      c.style.borderRadius=Math.random()>.5?'50%':'2px';
+      c.style.animationDuration=(Math.random()*2+1.5)+'s';
+      document.body.appendChild(c);setTimeout(()=>c.remove(),3500);
+    },i*30);
+  }
+}
+
+/* ==================================================
+   SOUND
+================================================== */
+let audioCtx=null;
+function getAudioCtx(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();return audioCtx}
+function playSound(type){
+  if(!state.settings.sound)return;
+  try{
+    const ctx=getAudioCtx();const o=ctx.createOscillator();const g=ctx.createGain();
+    o.connect(g);g.connect(ctx.destination);
+    if(type==='click'){o.type='sine';o.frequency.value=440;g.gain.setValueAtTime(.1,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.1);o.start();o.stop(ctx.currentTime+.1)}
+    else if(type==='complete'){o.type='sine';o.frequency.setValueAtTime(523,ctx.currentTime);o.frequency.setValueAtTime(659,ctx.currentTime+.1);o.frequency.setValueAtTime(784,ctx.currentTime+.2);g.gain.setValueAtTime(.15,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.4);o.start();o.stop(ctx.currentTime+.4)}
+    else if(type==='levelup'){o.type='square';o.frequency.setValueAtTime(262,ctx.currentTime);o.frequency.setValueAtTime(330,ctx.currentTime+.1);o.frequency.setValueAtTime(392,ctx.currentTime+.2);o.frequency.setValueAtTime(523,ctx.currentTime+.3);g.gain.setValueAtTime(.1,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.8);o.start();o.stop(ctx.currentTime+.8)}
+  }catch(e){}
+}
+
+/* ==================================================
+   UTIL
+================================================== */
+function escHtml(s){const d=document.createElement('div');d.appendChild(document.createTextNode(s));return d.innerHTML}
+function getLevelQuote(l){return["Keep grinding, warrior!","You're making progress!","Impressive dedication!","You're on fire! 🔥","Elite performer! 💪","Almost at the top! 🌟","Legendary status! 🏆","You're unstoppable! ⚡","Beyond human limits! 🚀"][Math.min(l-1,8)]}
+function getMsUntilMidnight(){const n=new Date();const m=new Date(n);m.setHours(24,0,0,0);return m-n}
+function formatMs(ms){const h=Math.floor(ms/3600000);const m=Math.floor((ms%3600000)/60000);return h>0?`${h}h ${m}m`:`${m}m`}
+function confirmReset(){if(confirm('⚠️ Reset ALL data? Cannot be undone!')){localStorage.removeItem('levelup_v3');location.reload()}}
+
+/* ==================================================
+   INIT
+================================================== */
+function init(){
+  loadState();checkNewDay();applyAccentColor();renderAll();checkAchievements();
+  // Countdown clock
+  updateCountdown();setInterval(updateCountdown,1000);
+  // Power Hour checker
+  setInterval(()=>{const phb=document.getElementById('powerHourBanner');if(phb)renderDashboard()},60000);
+  // Custom category toggle
+  const catSel=document.getElementById('newTaskCategory');
+  if(catSel)catSel.addEventListener('change',function(){
+    document.getElementById('customCategoryWrap').style.display=this.value==='Custom'?'block':'none';
+  });
+}
+document.addEventListener('DOMContentLoaded',init);
+document.getElementById('editModal').addEventListener('click',function(e){if(e.target===this)closeEditModal()});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.activeElement.id==='newTaskName')addTask()});
+</script>
+</body>
+</html>
